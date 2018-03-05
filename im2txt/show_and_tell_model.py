@@ -29,8 +29,8 @@ import numpy as np
 import sys
 sys.path.append('ops')
 
-#import image_embedding
-#import image_processing
+import image_embedding
+import image_processing
 import inputs as input_ops
 
 
@@ -106,23 +106,24 @@ class ShowAndTellModel(object):
     return self.mode == "train"
 
 
-  #def process_image(self, encoded_image, thread_id=0): #DONT NEED THIS ############
-    """Decodes and processes an image string.
+  def process_image(self, encoded_image, thread_id=0):
+    '''
+        Decodes and processes an image string.
 
-    Args:
+        Args:
       encoded_image: A scalar string Tensor; the encoded image.
       thread_id: Preprocessing thread id used to select the ordering of color
         distortions.
 
-    Returns:
-      A float32 Tensor of shape [height, width, 3]; the processed image.
-    """
-    #return image_processing.process_image(encoded_image,
-                                          #is_training=self.is_training(),
-                                          #height=self.config.image_height,
-                                          #width=self.config.image_width,
-                                          #thread_id=thread_id,
-                                          #image_format=self.config.image_format)
+        Returns:
+        A float32 Tensor of shape [height, width, 3]; the processed image.
+    '''
+    return image_processing.process_image(encoded_image,
+                                          is_training=self.is_training(),
+                                          height=self.config.image_height,
+                                          width=self.config.image_width,
+                                          thread_id=thread_id,
+                                          image_format=self.config.image_format)
 
   def build_inputs(self):
     """Input prefetching, preprocessing and batching.
@@ -141,7 +142,7 @@ class ShowAndTellModel(object):
                                   name="input_feed")
 
       # Process image and insert batch dimensions.
-      images = tf.expand_dims(image_feed, 0)
+      images = tf.expand_dims(self.process_image(image_feed), 0)
       input_seqs = tf.expand_dims(input_feed, 1)
 
       # No target sequences or input mask in inference mode.
@@ -169,8 +170,7 @@ class ShowAndTellModel(object):
             serialized_sequence_example,
             image_feature=self.config.image_feature_name,
             caption_feature=self.config.caption_feature_name)
-        image = tf.decode_raw(encoded_image, tf.int64)
-        image = tf.cast(tf.reshape(image, [4096]), tf.float32) / 1000000000000000.0
+        image = self.process_image(encoded_image, thread_id=thread_id)
         images_and_captions.append([image, caption])
 
       # Batch inputs.
@@ -195,17 +195,17 @@ class ShowAndTellModel(object):
     Outputs:
       self.image_embeddings
     """
-    #inception_output = image_embedding.inception_v3(
-        #self.images,
-        #trainable=self.train_inception,
-        #is_training=self.is_training())
-    #self.inception_variables = tf.get_collection(
-        #tf.GraphKeys.GLOBAL_VARIABLES, scope="InceptionV3")
+    inception_output = image_embedding.inception_v3(
+        self.images,
+        trainable=self.train_inception,
+        is_training=self.is_training())
+    self.inception_variables = tf.get_collection(
+        tf.GraphKeys.GLOBAL_VARIABLES, scope="InceptionV3")
 
     # Map inception output into embedding space.
     with tf.variable_scope("image_embedding") as scope:
       image_embeddings = tf.contrib.layers.fully_connected(
-          inputs=self.images,
+          inputs=inception_output,
           num_outputs=self.config.embedding_size,
           activation_fn=None,
           weights_initializer=self.initializer,
@@ -229,7 +229,7 @@ class ShowAndTellModel(object):
     with tf.variable_scope("seq_embedding"): #tf.device("/cpu:0"):
       embedding_map = tf.get_variable(
           name="map",
-          initializer=self.pretrained_glove, trainable=False ,dtype=tf.float32)
+          initializer=self.pretrained_glove, trainable=True ,dtype=tf.float32)
 
       seq_embeddings = tf.nn.embedding_lookup(embedding_map, self.input_seqs)
 
@@ -362,5 +362,5 @@ class ShowAndTellModel(object):
     self.build_image_embeddings()
     self.build_seq_embeddings()
     self.build_model()
-    #self.setup_inception_initializer()
+    self.setup_inception_initializer()
     self.setup_global_step()

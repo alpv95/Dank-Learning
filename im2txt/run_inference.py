@@ -17,6 +17,7 @@ r"""Generate captions for images using default beam search parameters."""
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+from __builtin__ import any as b_any
 
 import math
 import os
@@ -50,11 +51,16 @@ tf.logging.set_verbosity(tf.logging.INFO)
 
 
 def main(_):
+  #Read Caption.txt file to check if any generated captions are copies from the dataset:
+  with open('Captions.txt','r') as f:
+      data_captions = f.readlines()
+  data_captions = [s.lower() for s in data_captions]
+
   #convert jpg image(s) into iamge representations using alexnet:
   filenames = [os.path.join(image_dir, f) for f in ['overly-attached-girlfriend.jpg','high-expectations-asian-father.jpg','foul-bachelor-frog.jpg','stoner-stanley.jpg','y-u-no.jpg','willy-wonka.jpg','futurama-fry.jpg','success-kid.jpg','one-does-not-simply.jpg','bad-luck-brian.jpg','first-world-problems.jpg','philosoraptor.jpg','what-if-i-told-you.jpg','TutorPP.jpg']]
-  print(filenames)
   tf.logging.info("Running caption generation on %d files matching %s",
                   len(filenames), FLAGS.input_files)
+  '''
   #mean of imagenet dataset in BGR
   imagenet_mean = np.array([104., 117., 124.], dtype=np.float32)
 
@@ -105,6 +111,7 @@ def main(_):
 
   print(len(meme_embeddings))
   print(meme_embeddings)
+  '''
   # Build the inference graph.
   g = tf.Graph()
   with g.as_default():
@@ -121,7 +128,6 @@ def main(_):
     #filenames.extend(tf.gfile.Glob(file_pattern))
   #tf.logging.info("Running caption generation on %d files matching %s",
                   #len(filenames), FLAGS.input_files)
-  print('ok')
   with tf.Session(graph=g) as sess:
     # Load the model from checkpoint.
     restore_fn(sess)
@@ -130,18 +136,29 @@ def main(_):
     # beam search parameters. See caption_generator.py for a description of the
     # available beam search parameters.
     generator = caption_generator.CaptionGenerator(model, vocab)
-    print('yes')
-    for i,meme in enumerate(meme_embeddings):
-      print('its working')
-      #with tf.gfile.GFile(filename, "rb") as f:
-        #image = f.read()
-      captions = generator.beam_search(sess, meme)
+    num_in_data_total = 0
+    num_captions = 0
+    for i,filename in enumerate(filenames):
+      with tf.gfile.GFile(filename, "rb") as f:
+        image = f.read()
+      captions = generator.beam_search(sess, image)
       print("Captions for image %s:" % os.path.basename(filenames[i]))
+      num_in_data = 0
       for i, caption in enumerate(captions):
         # Ignore begin and end words.
         sentence = [vocab.id_to_word(w) for w in caption.sentence[1:-1]]
         sentence = " ".join(sentence)
-        print("  %d) %s (p=%f)" % (i, sentence, math.exp(caption.logprob)))
+        in_data = 0
+        if b_any(sentence in capt for capt in data_captions):
+            in_data = 1
+            num_in_data += 1
+            num_in_data_total += 1
+            num_captions += 1
+        else:
+            num_captions += 1
+        print("  %d) %s (p=%f) [in data = %d]" % (i, sentence, math.exp(caption.logprob),in_data))
+      print("number of captions in data = %d" % (num_in_data))
+    print("(total number of captions in data = %d) percent in data = %d" % (num_in_data_total,(num_in_data_total/num_captions)))
 
 
 if __name__ == "__main__":
