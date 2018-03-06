@@ -63,7 +63,7 @@ class ShowAndTellModel(object):
         minval=-self.config.initializer_scale,
         maxval=self.config.initializer_scale)
 
-    self.pretrained_glove = tf.constant(np.loadtxt('embedding_matrix4',dtype=np.float32))
+    self.pretrained_glove = tf.constant(np.loadtxt('embedding_matrix3',dtype=np.float32))
 
     # A float32 Tensor with shape [batch_size, height, width, channels].
     self.images = None

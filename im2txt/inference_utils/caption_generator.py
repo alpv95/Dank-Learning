@@ -213,8 +213,8 @@ class CaptionGenerator(object):
         words_and_probs = list(enumerate(word_probabilities))
         words_and_probs.sort(key=lambda x: -x[1])
 	#Introducing temperature into beam search: instead of taking the top 5, choose 5 from probability distribution
-        words_and_probs = self.random_pick(words_and_probs[:100],self.beam_size,self.temperature)
-	#words_and_probs = words_and_probs[0:self.beam_size]
+        #words_and_probs = self.random_pick(words_and_probs[:100],self.beam_size,self.temperature)
+	words_and_probs = words_and_probs[0:self.beam_size]
         
         # Each next word gives a new partial caption.
         for w, p in words_and_probs:
