@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import math
 import os
+os.environ["CUDA_VISIBLE_DEVICES"]=""
 import numpy as np
 from PIL import Image
 from alexnet import AlexNet

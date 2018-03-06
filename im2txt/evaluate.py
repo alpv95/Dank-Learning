@@ -22,7 +22,8 @@ in TensorBoard.
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-
+import os
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
 import math
 import os.path
 import time
@@ -31,8 +32,8 @@ import time
 import numpy as np
 import tensorflow as tf
 
-from im2txt import configuration
-from im2txt import show_and_tell_model
+import configuration
+import show_and_tell_model
 
 FLAGS = tf.flags.FLAGS
 
@@ -44,10 +45,10 @@ tf.flags.DEFINE_string("eval_dir", "", "Directory to write event logs.")
 
 tf.flags.DEFINE_integer("eval_interval_secs", 600,
                         "Interval between evaluation runs.")
-tf.flags.DEFINE_integer("num_eval_examples", 10132,
+tf.flags.DEFINE_integer("num_eval_examples", 8,
                         "Number of examples for evaluation.")
 
-tf.flags.DEFINE_integer("min_global_step", 5000,
+tf.flags.DEFINE_integer("min_global_step", 100,
                         "Minimum global step to run evaluation.")
 
 tf.logging.set_verbosity(tf.logging.INFO)

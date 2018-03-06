@@ -63,7 +63,7 @@ class ShowAndTellModel(object):
         minval=-self.config.initializer_scale,
         maxval=self.config.initializer_scale)
 
-    self.pretrained_glove = tf.constant(np.loadtxt('embedding_matrix3',dtype=np.float32))
+    self.pretrained_glove = tf.constant(np.loadtxt('embedding_matrix5',dtype=np.float32))
 
     # A float32 Tensor with shape [batch_size, height, width, channels].
     self.images = None
@@ -229,7 +229,7 @@ class ShowAndTellModel(object):
     with tf.variable_scope("seq_embedding"): #tf.device("/cpu:0"):
       embedding_map = tf.get_variable(
           name="map",
-          initializer=self.pretrained_glove, trainable=False ,dtype=tf.float32)
+          initializer=self.pretrained_glove, trainable=True ,dtype=tf.float32)
 
       seq_embeddings = tf.nn.embedding_lookup(embedding_map, self.input_seqs)
 
