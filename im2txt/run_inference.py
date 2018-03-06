@@ -21,6 +21,7 @@ from __builtin__ import any as b_any
 
 import math
 import os
+os.environ["CUDA_VISIBLE_DEVICES"]=""
 import numpy as np
 from PIL import Image
 from alexnet import AlexNet
@@ -51,15 +52,7 @@ tf.logging.set_verbosity(tf.logging.INFO)
 
 
 def main(_):
-  #Read Caption.txt file to check if any generated captions are copies from the dataset:
-  with open('Captions.txt','r') as f:
-      data_captions = f.readlines()
-  data_captions = [s.lower() for s in data_captions]
 
-  #convert jpg image(s) into iamge representations using alexnet:
-  filenames = [os.path.join(image_dir, f) for f in ['overly-attached-girlfriend.jpg','high-expectations-asian-father.jpg','foul-bachelor-frog.jpg','stoner-stanley.jpg','y-u-no.jpg','willy-wonka.jpg','futurama-fry.jpg','success-kid.jpg','one-does-not-simply.jpg','bad-luck-brian.jpg','first-world-problems.jpg','philosoraptor.jpg','what-if-i-told-you.jpg','TutorPP.jpg']]
-  tf.logging.info("Running caption generation on %d files matching %s",
-                  len(filenames), FLAGS.input_files)
   '''
   #mean of imagenet dataset in BGR
   imagenet_mean = np.array([104., 117., 124.], dtype=np.float32)
@@ -123,6 +116,14 @@ def main(_):
   # Create the vocabulary.
   vocab = vocabulary.Vocabulary(FLAGS.vocab_file)
 
+  with open('Captions.txt','r') as f:
+      data_captions = f.readlines()
+  data_captions = [s.lower() for s in data_captions]
+
+  #convert jpg image(s) into iamge representations using alexnet:
+  filenames = [os.path.join(image_dir, f) for f in ['overly-attached-girlfriend.jpg','high-expectations-asian-father.jpg','foul-bachelor-frog.jpg','stoner-stanley.jpg','y-u-no.jpg','willy-wonka.jpg','futurama-fry.jpg','success-kid.jpg','one-does-not-simply.jpg','bad-luck-brian.jpg','first-world-problems.jpg','philosoraptor.jpg','what-if-i-told-you.jpg','TutorPP.jpg']]
+  tf.logging.info("Running caption generation on %d files matching %s",
+                  len(filenames), FLAGS.input_files)
   #filenames = []
   #for file_pattern in FLAGS.input_files.split(","):
     #filenames.extend(tf.gfile.Glob(file_pattern))
@@ -158,7 +159,7 @@ def main(_):
             num_captions += 1
         print("  %d) %s (p=%f) [in data = %d]" % (i, sentence, math.exp(caption.logprob),in_data))
       print("number of captions in data = %d" % (num_in_data))
-    print("(total number of captions in data = %d) percent in data = %d" % (num_in_data_total,(num_in_data_total/num_captions)))
+    print("(total number of captions in data = %d) percent in data = %f" % (num_in_data_total,(num_in_data_total/num_captions)))
 
 
 if __name__ == "__main__":

@@ -63,7 +63,7 @@ class ShowAndTellModel(object):
         minval=-self.config.initializer_scale,
         maxval=self.config.initializer_scale)
 
-    self.pretrained_glove = tf.constant(np.loadtxt('embedding_matrix4',dtype=np.float32))
+    self.pretrained_glove = tf.constant(np.loadtxt('embedding_matrix5',dtype=np.float32))
 
     # A float32 Tensor with shape [batch_size, height, width, channels].
     self.images = None
@@ -136,7 +136,7 @@ class ShowAndTellModel(object):
     """
     if self.mode == "inference":
       # In inference mode, images and inputs are fed via placeholders.
-      image_feed = tf.placeholder(dtype=tf.float32, shape=[4096], name="image_feed")
+      image_feed = tf.placeholder(dtype=tf.string, shape=[], name="image_feed")
       input_feed = tf.placeholder(dtype=tf.int64,
                                   shape=[None],  # batch_size
                                   name="input_feed")

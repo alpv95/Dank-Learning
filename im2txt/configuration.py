@@ -50,14 +50,14 @@ class ModelConfig(object):
     # for differences between tokenizer versions used in preprocessing. There is
     # no harm in using a value greater than the actual vocab size, but using a
     # value less than the actual vocab size will result in an error.
-    self.vocab_size = 38520 #38525 #44441
+    self.vocab_size = 38521 #38525 #44441
 
 
     # Number of threads for image preprocessing. Should be a multiple of 2.
     self.num_preprocess_threads = 4
 
     # Batch size.
-    self.batch_size = 64 #32
+    self.batch_size = 32 #32
 
     # File containing an Inception v3 checkpoint to initialize the variables
     # of the Inception model. Must be provided when starting training for the
@@ -85,10 +85,10 @@ class TrainingConfig(object):
   def __init__(self):
     """Sets the default training hyperparameters."""
     # Number of examples per epoch of training data.
-    self.num_examples_per_epoch = 353700
+    self.num_examples_per_epoch = 355437
 
     # Optimizer for training the model.
-    self.optimizer = lambda lr: tf.train.MomentumOptimizer(learning_rate=lr,momentum=0.9)
+    self.optimizer = 'SGD' #lambda lr: tf.train.MomentumOptimizer(learning_rate=lr,momentum=0.9)
 
     # Learning rate for the initial phase of training.
     self.initial_learning_rate = 2.0
