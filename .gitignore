@@ -3,6 +3,8 @@ im2txt/glove*
 im2txt/embedding_matrix*
 im2txt/trainlog*
 im2txt/bvlc_alexnet.npy
+im2txt/eval.tfrecords*
+MemeNote.ipynb
 
 #compiled source #
 ###################
