@@ -63,7 +63,7 @@ class ShowAndTellModel(object):
         minval=-self.config.initializer_scale,
         maxval=self.config.initializer_scale)
 
-    self.pretrained_glove = tf.constant(np.loadtxt('embedding_matrix5',dtype=np.float32))
+    self.pretrained_glove = tf.constant(np.loadtxt('embedding_matrix_averages',dtype=np.float32))
 
     # A float32 Tensor with shape [batch_size, height, width, channels].
     self.images = None
@@ -166,17 +166,18 @@ class ShowAndTellModel(object):
       images_and_captions = []
       for thread_id in range(self.config.num_preprocess_threads):
         serialized_sequence_example = input_queue.dequeue()
-        encoded_image, caption = input_ops.parse_sequence_example(
+        encoded_image, caption, label = input_ops.parse_sequence_example(
             serialized_sequence_example,
             image_feature=self.config.image_feature_name,
-            caption_feature=self.config.caption_feature_name)
+            caption_feature=self.config.caption_feature_name,
+	    label_feature=self.config.label_feature_name)
         image = self.process_image(encoded_image, thread_id=thread_id)
-        images_and_captions.append([image, caption])
+        images_and_captions.append([image, caption, label])
 
       # Batch inputs.
       queue_capacity = (2 * self.config.num_preprocess_threads *
                         self.config.batch_size)
-      images, input_seqs, target_seqs, input_mask = (
+      images, input_seqs, target_seqs, input_mask, labels, labels_mask = (
           input_ops.batch_with_dynamic_pad(images_and_captions,
                                            batch_size=self.config.batch_size,
                                            queue_capacity=queue_capacity))
@@ -185,6 +186,8 @@ class ShowAndTellModel(object):
     self.input_seqs = input_seqs
     self.target_seqs = target_seqs
     self.input_mask = input_mask
+    self.labels = labels
+    self.labels_mask = labels_mask
 
   def build_image_embeddings(self):
     """Builds the image model subgraph and generates image embeddings. ############## HERE GO FROM IMAGE VECTORS TO FIRST HIDDEN LAYER EMBEDINGS
@@ -232,6 +235,9 @@ class ShowAndTellModel(object):
           initializer=self.pretrained_glove, trainable=True ,dtype=tf.float32)
 
       seq_embeddings = tf.nn.embedding_lookup(embedding_map, self.input_seqs)
+   labels_embeddings = tf.nn.embedding_lookup(embedding_map, self.labels)
+      #Now calculate the average of the glove label vectors
+	tf.reduce_mean(tf.boolean_mask(
 
     self.seq_embeddings = seq_embeddings
 

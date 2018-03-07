@@ -44,13 +44,14 @@ class ModelConfig(object):
     self.image_feature_name = "train/meme"
     # Name of the SequenceExample feature list containing integer captions.
     self.caption_feature_name = "train/captions"
+    self.label_feature_name = "train/labels"
 
     # Number of unique words in the vocab (plus 1, for <UNK>).
     # The default value is larger than the expected actual vocab size to allow
     # for differences between tokenizer versions used in preprocessing. There is
     # no harm in using a value greater than the actual vocab size, but using a
     # value less than the actual vocab size will result in an error.
-    self.vocab_size = 38521 #38525 #44441
+    self.vocab_size = 38821 #38525 #44441
 
 
     # Number of threads for image preprocessing. Should be a multiple of 2.
@@ -85,7 +86,7 @@ class TrainingConfig(object):
   def __init__(self):
     """Sets the default training hyperparameters."""
     # Number of examples per epoch of training data.
-    self.num_examples_per_epoch = 355437
+    self.num_examples_per_epoch = 355487
 
     # Optimizer for training the model.
     self.optimizer = 'SGD' #lambda lr: tf.train.MomentumOptimizer(learning_rate=lr,momentum=0.9)
