@@ -19,7 +19,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-os.environ["CUDA_VISIBLE_DEVICES"]="3"
+os.environ["CUDA_VISIBLE_DEVICES"]="1"
 import tensorflow as tf
 import sys
 sys.path.append('~/Desktop/Stanford/CS224n/MemeProject')

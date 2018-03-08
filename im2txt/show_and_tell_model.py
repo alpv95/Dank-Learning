@@ -140,14 +140,20 @@ class ShowAndTellModel(object):
       input_feed = tf.placeholder(dtype=tf.int64,
                                   shape=[None],  # batch_size
                                   name="input_feed")
+      label_feed = tf.placeholder(dtype=tf.int64,
+                                  shape=[None],  # batch_size
+                                  name="input_feed")
+
 
       # Process image and insert batch dimensions.
       images = tf.expand_dims(self.process_image(image_feed), 0)
       input_seqs = tf.expand_dims(input_feed, 1)
+      labels = tf.expand_dims(label_feed,0)
 
       # No target sequences or input mask in inference mode.
       target_seqs = None
       input_mask = None
+      labels_mask = None
     else:
       # Prefetch serialized SequenceExample protos.
       input_queue = input_ops.prefetch_input_data(
@@ -206,19 +212,20 @@ class ShowAndTellModel(object):
         tf.GraphKeys.GLOBAL_VARIABLES, scope="InceptionV3")
 
     # Map inception output into embedding space.
-    with tf.variable_scope("image_embedding") as scope:
-      image_embeddings = tf.contrib.layers.fully_connected(
-          inputs=inception_output,
-          num_outputs=self.config.embedding_size,
-          activation_fn=None,
-          weights_initializer=self.initializer,
-          biases_initializer=None,
-          scope=scope)
+    #with tf.variable_scope("image_embedding") as scope:
+      #image_embeddings = tf.contrib.layers.fully_connected(
+          #inputs=inception_output,
+          #num_outputs=self.config.embedding_size,
+          #activation_fn=None,
+          #weights_initializer=self.initializer,
+          #biases_initializer=None,
+          #scope=scope)
 
     # Save the embedding size in the graph.
     tf.constant(self.config.embedding_size, name="embedding_size")
 
-    self.image_embeddings = image_embeddings
+    #self.image_embeddings = image_embeddings
+    self.inception_representation = inception_output	
 
   def build_seq_embeddings(self):
     """Builds the input sequence embeddings.       ############# MAKE EMBEDDING MATRIX UNTRAINABLE< LOAD GLOVE
@@ -235,11 +242,15 @@ class ShowAndTellModel(object):
           initializer=self.pretrained_glove, trainable=True ,dtype=tf.float32)
 
       seq_embeddings = tf.nn.embedding_lookup(embedding_map, self.input_seqs)
-   labels_embeddings = tf.nn.embedding_lookup(embedding_map, self.labels)
+      labels_embeddings = tf.nn.embedding_lookup(embedding_map, self.labels)
       #Now calculate the average of the glove label vectors
-	tf.reduce_mean(tf.boolean_mask(
+    if self.mode =='inference'
+       label_avgs = tf.reduce_mean(labels_embeddings,axis=1)
+    else:
+       label_avgs = tf.reduce_sum(labels_embeddings,axis=1) / tf.count_nonzero(self.labels_mask,axis=1,keepdims=True,dtype=tf.float32)    
 
     self.seq_embeddings = seq_embeddings
+    self.label_avgs = label_avgs
 
   def build_model(self):
     """Builds the model.
@@ -266,11 +277,23 @@ class ShowAndTellModel(object):
           input_keep_prob=self.config.lstm_dropout_keep_prob,
           output_keep_prob=self.config.lstm_dropout_keep_prob)
 
+    # Map inception output into embedding space + label vectors concat them
+    image_and_label = tf.concat([self.inception_representation, self.label_avgs], 1)
+    with tf.variable_scope("image_and_label_embedding") as scope:
+      image_and_label_embeddings = tf.contrib.layers.fully_connected(
+          inputs=image_and_label,
+          num_outputs=self.config.embedding_size,
+          activation_fn=None,
+          weights_initializer=self.initializer,
+          biases_initializer=None,
+          scope=scope)
+
+
     with tf.variable_scope("lstm", initializer=self.initializer) as lstm_scope:
       # Feed the image embeddings to set the initial LSTM state.
       zero_state = lstm_cell.zero_state(
           batch_size=self.image_embeddings.get_shape()[0], dtype=tf.float32)
-      _, initial_state = lstm_cell(self.image_embeddings, zero_state)
+      _, initial_state = lstm_cell(image_and_label_embeddings, zero_state)
 
       # Allow the LSTM variables to be reused.
       lstm_scope.reuse_variables()
