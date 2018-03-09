@@ -244,10 +244,10 @@ class ShowAndTellModel(object):
       seq_embeddings = tf.nn.embedding_lookup(embedding_map, self.input_seqs)
       labels_embeddings = tf.nn.embedding_lookup(embedding_map, self.labels)
       #Now calculate the average of the glove label vectors
-    if self.mode =='inference'
+    if self.mode =='inference':
        label_avgs = tf.reduce_mean(labels_embeddings,axis=1)
     else:
-       label_avgs = tf.reduce_sum(labels_embeddings,axis=1) / tf.count_nonzero(self.labels_mask,axis=1,keepdims=True,dtype=tf.float32)    
+       label_avgs = tf.reduce_sum(labels_embeddings,axis=1) / tf.expand_dims(tf.count_nonzero(self.labels_mask,axis=1,dtype=tf.float32),axis=-1)    
 
     self.seq_embeddings = seq_embeddings
     self.label_avgs = label_avgs
@@ -292,7 +292,7 @@ class ShowAndTellModel(object):
     with tf.variable_scope("lstm", initializer=self.initializer) as lstm_scope:
       # Feed the image embeddings to set the initial LSTM state.
       zero_state = lstm_cell.zero_state(
-          batch_size=self.image_embeddings.get_shape()[0], dtype=tf.float32)
+          batch_size=image_and_label_embeddings.get_shape()[0], dtype=tf.float32)
       _, initial_state = lstm_cell(image_and_label_embeddings, zero_state)
 
       # Allow the LSTM variables to be reused.
