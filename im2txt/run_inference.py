@@ -36,7 +36,8 @@ import caption_generator
 import vocabulary
 
 current_dir = os.getcwd()
-image_dir = os.path.join(current_dir, 'memes')
+#image_dir = os.path.join(current_dir, 'memes')
+image_dir = os.path.join(current_dir, 'TAs')
 
 FLAGS = tf.flags.FLAGS
 
@@ -119,9 +120,14 @@ def main(_):
   with open('Captions.txt','r') as f:
       data_captions = f.readlines()
   data_captions = [s.lower() for s in data_captions]
-
+  
+  with open('ordered_memes.txt','r') as f:
+      ordered_memes = f.readlines()
+  ordered_memes = [meme.replace('\n','') for meme in ordered_memes]
   #convert jpg image(s) into iamge representations using alexnet:
-  filenames = [os.path.join(image_dir, f) for f in ['overly-attached-girlfriend.jpg','high-expectations-asian-father.jpg','foul-bachelor-frog.jpg','stoner-stanley.jpg','y-u-no.jpg','willy-wonka.jpg','futurama-fry.jpg','success-kid.jpg','one-does-not-simply.jpg','bad-luck-brian.jpg','first-world-problems.jpg','philosoraptor.jpg','what-if-i-told-you.jpg','TutorPP.jpg']]
+  filenames = [os.path.join(image_dir, f) for f in os.listdir('TAs')]
+  #filenames = [os.path.join(image_dir, f) for f in ordered_memes[150:160] + ['TutorPP.jpg']]
+  print(filenames)
   tf.logging.info("Running caption generation on %d files matching %s",
                   len(filenames), FLAGS.input_files)
   #filenames = []
