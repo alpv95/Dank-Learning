@@ -169,7 +169,7 @@ class CaptionGenerator(object):
     return picks
 
 
-  def beam_search(self, sess, encoded_image):
+  def beam_search(self, sess, encoded_image, image_label):
     """Runs beam search caption generation on a single image.
 
     Args:
@@ -180,7 +180,7 @@ class CaptionGenerator(object):
       A list of Caption sorted by descending score.
     """
     # Feed in the image to get the initial state.
-    initial_state = self.model.feed_image(sess, encoded_image)
+    initial_state = self.model.feed_image(sess, encoded_image,image_label)
 
     initial_beam = Caption(
         sentence=[self.vocab.start_id],

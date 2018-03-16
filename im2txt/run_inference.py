@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __builtin__ import any as b_any
+from difflib import SequenceMatcher
 
 import math
 import os
@@ -116,12 +117,18 @@ def main(_):
   # Create the vocabulary.
   vocab = vocabulary.Vocabulary(FLAGS.vocab_file)
 
-  with open('Captions.txt','r') as f:
+  with open('CaptionsClean.txt','r') as f:
       data_captions = f.readlines()
   data_captions = [s.lower() for s in data_captions]
+  data_captions = [capt.split(' - ')[-1] for capt in data_captions]
 
   #convert jpg image(s) into iamge representations using alexnet:
   filenames = [os.path.join(image_dir, f) for f in ['overly-attached-girlfriend.jpg','high-expectations-asian-father.jpg','foul-bachelor-frog.jpg','stoner-stanley.jpg','y-u-no.jpg','willy-wonka.jpg','futurama-fry.jpg','success-kid.jpg','one-does-not-simply.jpg','bad-luck-brian.jpg','first-world-problems.jpg','philosoraptor.jpg','what-if-i-told-you.jpg','TutorPP.jpg']]
+  image_labels = [(f.replace('.jpg','')).replace('-',' ').split() for f in ['overly-detached-boyfriend.jpg','low-expectations-american-father.jpg','nice-bachelor-frog.jpg','stoner-stanley.jpg','y-u-no.jpg','jiggalo.jpg','futurama-bender.jpg','success-adult.jpg','one-does-simply.jpg','good-luck-brian.jpg','third-world-problems.jpg','philosophy','what if i didnt tell u','stoner']]
+  print(image_labels)
+  #need to turn labels into integers
+  image_labels = [[vocab.word_to_id(w) for w in label] for label in image_labels]
+  print(image_labels)
   tf.logging.info("Running caption generation on %d files matching %s",
                   len(filenames), FLAGS.input_files)
   #filenames = []
@@ -137,12 +144,13 @@ def main(_):
     # beam search parameters. See caption_generator.py for a description of the
     # available beam search parameters.
     generator = caption_generator.CaptionGenerator(model, vocab)
+    #num_sim_data = 0
     num_in_data_total = 0
     num_captions = 0
     for i,filename in enumerate(filenames):
       with tf.gfile.GFile(filename, "rb") as f:
         image = f.read()
-      captions = generator.beam_search(sess, image)
+      captions = generator.beam_search(sess, image, image_labels[i])
       print("Captions for image %s:" % os.path.basename(filenames[i]))
       num_in_data = 0
       for i, caption in enumerate(captions):
@@ -157,10 +165,16 @@ def main(_):
             num_captions += 1
         else:
             num_captions += 1
+	
+        #for capt in data_captions:
+	   #if SequenceMatcher(a=sentence,b=capt).ratio() >= 0.98:
+	      #num_sim_data += 1
+	      #break
+
         print("  %d) %s (p=%f) [in data = %d]" % (i, sentence, math.exp(caption.logprob),in_data))
       print("number of captions in data = %d" % (num_in_data))
     print("(total number of captions in data = %d) percent in data = %f" % (num_in_data_total,(num_in_data_total/num_captions)))
-
+    #print("(total number of captions in data = %d) percent similar to data (0.98) = %f" % (num_in_data_total,(num_sim_data/num_captions)))
 
 if __name__ == "__main__":
   tf.app.run()

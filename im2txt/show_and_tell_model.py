@@ -142,7 +142,7 @@ class ShowAndTellModel(object):
                                   name="input_feed")
       label_feed = tf.placeholder(dtype=tf.int64,
                                   shape=[None],  # batch_size
-                                  name="input_feed")
+                                  name="label_feed")
 
 
       # Process image and insert batch dimensions.
@@ -276,7 +276,7 @@ class ShowAndTellModel(object):
           lstm_cell,
           input_keep_prob=self.config.lstm_dropout_keep_prob,
           output_keep_prob=self.config.lstm_dropout_keep_prob)
-
+    lstm_cell = tf.contrib.rnn.MultiRNNCell([lstm_cell]*2, state_is_tuple=True)
     # Map inception output into embedding space + label vectors concat them
     image_and_label = tf.concat([self.inception_representation, self.label_avgs], 1)
     with tf.variable_scope("image_and_label_embedding") as scope:

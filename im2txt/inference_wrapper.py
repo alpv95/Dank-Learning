@@ -37,9 +37,9 @@ class InferenceWrapper(inference_wrapper_base.InferenceWrapperBase):
     model.build()
     return model
 
-  def feed_image(self, sess, encoded_image):
+  def feed_image(self, sess, encoded_image, image_label):
     initial_state = sess.run(fetches="lstm/initial_state:0",
-                             feed_dict={"image_feed:0": encoded_image})
+                             feed_dict={"image_feed:0": encoded_image, "label_feed:0": image_label})
     return initial_state
 
   def inference_step(self, sess, input_feed, state_feed):
