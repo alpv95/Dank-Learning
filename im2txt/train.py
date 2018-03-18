@@ -41,7 +41,7 @@ tf.flags.DEFINE_string("train_dir", "",
                        "Directory for saving and loading model checkpoints.")
 tf.flags.DEFINE_boolean("train_inception", False,
                         "Whether to train inception submodel variables.")
-tf.flags.DEFINE_integer("number_of_steps", 1000000, "Number of training steps.")
+tf.flags.DEFINE_integer("number_of_steps", 600000, "Number of training steps.")
 tf.flags.DEFINE_integer("log_every_n_steps", 1,
                         "Frequency at which loss and global step are logged.")
 tf.flags.DEFINE_string("loss_file", "",
@@ -167,7 +167,7 @@ def main(unused_argv):
         learning_rate_decay_fn=learning_rate_decay_fn)
 
     # Set up the Saver for saving and restoring model checkpoints.
-    saver = tf.train.Saver(max_to_keep=training_config.max_checkpoints_to_keep)
+    saver = tf.train.Saver(max_to_keep=training_config.max_checkpoints_to_keep,keep_checkpoint_every_n_hours=2)
 
   # Run training.
   tf.contrib.slim.learning.train(

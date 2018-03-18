@@ -101,6 +101,18 @@ class ShowAndTellModel(object):
     # Global step Tensor.
     self.global_step = None
 
+    # ADDED
+    self.labels = None
+    self.labels_mask = None
+    self.label_avgs = None
+    self.labels_embeddings = None
+    self.attn_length = 10
+    self.num_layers = 2
+    self.encoder_state = None
+    self.encoder_out = None
+    self.source_sequence_length = None
+    self.training_decoder_output = None
+
   def is_training(self):
     """Returns true if the model is built for training mode."""
     return self.mode == "train"
@@ -142,7 +154,7 @@ class ShowAndTellModel(object):
                                   name="input_feed")
       label_feed = tf.placeholder(dtype=tf.int64,
                                   shape=[None],  # batch_size
-                                  name="label_feed")
+                                  name="input_feed")
 
 
       # Process image and insert batch dimensions.
@@ -176,7 +188,7 @@ class ShowAndTellModel(object):
             serialized_sequence_example,
             image_feature=self.config.image_feature_name,
             caption_feature=self.config.caption_feature_name,
-	    label_feature=self.config.label_feature_name)
+            label_feature=self.config.label_feature_name)
         image = self.process_image(encoded_image, thread_id=thread_id)
         images_and_captions.append([image, caption, label])
 
@@ -212,20 +224,20 @@ class ShowAndTellModel(object):
         tf.GraphKeys.GLOBAL_VARIABLES, scope="InceptionV3")
 
     # Map inception output into embedding space.
-    #with tf.variable_scope("image_embedding") as scope:
-      #image_embeddings = tf.contrib.layers.fully_connected(
-          #inputs=inception_output,
-          #num_outputs=self.config.embedding_size,
-          #activation_fn=None,
-          #weights_initializer=self.initializer,
-          #biases_initializer=None,
-          #scope=scope)
+    with tf.variable_scope("image_embedding") as scope:
+      image_embeddings = tf.contrib.layers.fully_connected(
+          inputs=inception_output,
+          num_outputs=self.config.embedding_size,
+          activation_fn=None,
+          weights_initializer=self.initializer,
+          biases_initializer=None,
+          scope=scope)
 
     # Save the embedding size in the graph.
     tf.constant(self.config.embedding_size, name="embedding_size")
 
-    #self.image_embeddings = image_embeddings
-    self.inception_representation = inception_output	
+    self.image_embeddings = image_embeddings
+
 
   def build_seq_embeddings(self):
     """Builds the input sequence embeddings.       ############# MAKE EMBEDDING MATRIX UNTRAINABLE< LOAD GLOVE
@@ -247,10 +259,16 @@ class ShowAndTellModel(object):
     if self.mode =='inference':
        label_avgs = tf.reduce_mean(labels_embeddings,axis=1)
     else:
-       label_avgs = tf.reduce_sum(labels_embeddings,axis=1) / tf.expand_dims(tf.count_nonzero(self.labels_mask,axis=1,dtype=tf.float32),axis=-1)    
+       label_avgs = tf.reduce_sum(labels_embeddings,axis=1) / tf.expand_dims(tf.count_nonzero(self.labels_mask,axis=1,dtype=tf.float32),axis=-1)
 
     self.seq_embeddings = seq_embeddings
     self.label_avgs = label_avgs
+    self.labels_embeddings = labels_embeddings
+
+  # Need this function, because you cannot call the first cell twice!!!
+  def make_cell(self, lstm_size):
+      return tf.nn.rnn_cell.BasicLSTMCell(lstm_size, state_is_tuple=True)
+
 
   def build_model(self):
     """Builds the model.
@@ -266,39 +284,71 @@ class ShowAndTellModel(object):
       self.target_cross_entropy_losses (training and eval only)
       self.target_cross_entropy_loss_weights (training and eval only)
     """
-    # This LSTM cell has biases and outputs tanh(new_c) * sigmoid(o), but the
-    # modified LSTM in the "Show and Tell" paper has no biases and outputs
-    # new_c * sigmoid(o).
-    lstm_cell = tf.contrib.rnn.BasicLSTMCell(
-        num_units=self.config.num_lstm_units, state_is_tuple=True)
+
+
+    #ENCODER
+    encoder_cell = tf.contrib.rnn.BasicLSTMCell(num_units=self.config.num_lstm_units, state_is_tuple=True)
     if self.mode == "train":
-      lstm_cell = tf.contrib.rnn.DropoutWrapper(
-          lstm_cell,
-          input_keep_prob=self.config.lstm_dropout_keep_prob,
-          output_keep_prob=self.config.lstm_dropout_keep_prob)
-    lstm_cell = tf.contrib.rnn.MultiRNNCell([lstm_cell]*2, state_is_tuple=True)
-    # Map inception output into embedding space + label vectors concat them
-    image_and_label = tf.concat([self.inception_representation, self.label_avgs], 1)
-    with tf.variable_scope("image_and_label_embedding") as scope:
-      image_and_label_embeddings = tf.contrib.layers.fully_connected(
-          inputs=image_and_label,
-          num_outputs=self.config.embedding_size,
-          activation_fn=None,
-          weights_initializer=self.initializer,
-          biases_initializer=None,
-          scope=scope)
+        encoder_cell = tf.contrib.rnn.DropoutWrapper(encoder_cell, input_keep_prob=self.config.lstm_dropout_keep_prob, output_keep_prob=self.config.lstm_dropout_keep_prob)
+
+    with tf.variable_scope("encoder",initializer=self.initializer) as encoder_scope:  #################### ADDED
+        #encoder_cell = tf.contrib.rnn.BasicLSTMCell(num_units=self.config.num_lstm_units, state_is_tuple=True)
+        #source_sequence_length = tf.reduce_sum(self.labels_mask, 1)
+
+        zero_state = encoder_cell.zero_state(batch_size=self.image_embeddings.get_shape()[0], dtype=tf.float32)
+        _, initial_state = encoder_cell(self.image_embeddings, zero_state)
+
+        encoder_scope.reuse_variables()
+
+        source_sequence_length = tf.reduce_sum(self.labels_mask, 1)
+        encoder_out, encoder_state = tf.nn.dynamic_rnn(cell=encoder_cell,
+                                                 inputs=self.labels_embeddings,
+                                                 sequence_length=source_sequence_length,
+                                                 initial_state=initial_state,
+                                                 dtype=tf.float32,
+                                                 scope=encoder_scope)
+
+        self.encoder_state = encoder_state
+        self.encoder_out = encoder_out
+        self.source_sequence_length = source_sequence_length
+
+
+
+    # 2-layer LSTM network
+    #lstm_cell = tf.contrib.rnn.MultiRNNCell([self.make_cell(self.config.num_lstm_units) for _ in range(2)], state_is_tuple=True)
+
+    lstm_cell = tf.contrib.rnn.BasicLSTMCell(num_units=self.config.num_lstm_units, state_is_tuple=True)
+    if self.mode == "train":
+        lstm_cell = tf.contrib.rnn.DropoutWrapper(lstm_cell, input_keep_prob=self.config.lstm_dropout_keep_prob, output_keep_prob=self.config.lstm_dropout_keep_prob)
+
+    #lstm_cell = tf.contrib.rnn.AttentionCellWrapper(lstm_cell, self.attn_length, state_is_tuple=True)
+
+
+    # ATTENTION
+    attention_mechanism = tf.contrib.seq2seq.LuongAttention(
+        num_units=self.config.num_lstm_units,
+        memory=self.encoder_out,
+        memory_sequence_length=self.source_sequence_length)
+
+    lstm_cell = tf.contrib.seq2seq.AttentionWrapper(
+        cell=lstm_cell,
+        attention_mechanism=attention_mechanism,
+        attention_layer_size=self.config.num_lstm_units)
 
 
     with tf.variable_scope("lstm", initializer=self.initializer) as lstm_scope:
       # Feed the image embeddings to set the initial LSTM state.
-      zero_state = lstm_cell.zero_state(
-          batch_size=image_and_label_embeddings.get_shape()[0], dtype=tf.float32)
-      _, initial_state = lstm_cell(image_and_label_embeddings, zero_state)
+      #zero_state = lstm_cell.zero_state(batch_size=self.image_embeddings.get_shape()[0], dtype=tf.float32)
+      #_, initial_state = lstm_cell(self.image_embeddings, zero_state)
+
+      #initial_state = self.encoder_state
 
       # Allow the LSTM variables to be reused.
-      lstm_scope.reuse_variables()
+      #lstm_scope.reuse_variables()
 
       if self.mode == "inference":
+        zero_state = lstm_cell.zero_state(batch_size=self.image_embeddings.get_shape()[0], dtype=tf.float32)
+        _, initial_state = lstm_cell(self.image_embeddings, zero_state)
         # In inference mode, use concatenated states for convenient feeding and
         # fetching.
         tf.concat(axis=1, values=initial_state, name="initial_state")
@@ -317,18 +367,50 @@ class ShowAndTellModel(object):
         # Concatentate the resulting state.
         tf.concat(axis=1, values=state_tuple, name="state")
       else:
+        '''
         # Run the batch of sequence embeddings through the LSTM.
-        sequence_length = tf.reduce_sum(self.input_mask, 1)
+        
+        print(sequence_length.shape)
+
+
+        print("Currently here")
+
         lstm_outputs, _ = tf.nn.dynamic_rnn(cell=lstm_cell,
                                             inputs=self.seq_embeddings,
                                             sequence_length=sequence_length,
                                             initial_state=initial_state,
                                             dtype=tf.float32,
                                             scope=lstm_scope)
+        '''
+        #initial_state = lstm_cell.zero_state(batch_size=self.config.batch_size, dtype=tf.float32).clone(cell_state=self.encoder_state)
+
+        sequence_length = tf.reduce_sum(self.input_mask, 1)
+        training_helper = tf.contrib.seq2seq.TrainingHelper(
+            inputs=self.seq_embeddings,
+            sequence_length=sequence_length,
+            time_major=False)
+        projection_layer = tf.layers.Dense(self.config.vocab_size) #check this
+        training_decoder = tf.contrib.seq2seq.BasicDecoder(
+            cell=lstm_cell,
+            helper=training_helper,
+            initial_state=lstm_cell.zero_state(batch_size=self.config.batch_size, dtype=tf.float32).clone(cell_state=self.encoder_state),
+            output_layer=projection_layer)
+
+        training_decoder_output, _, _ = tf.contrib.seq2seq.dynamic_decode(
+            decoder=training_decoder,
+            impute_finished=True)
+        # maximum_iterations=tf.reduce_max(sequence_length))
+        self.training_decoder_output = training_decoder_output
+
+
 
     # Stack batches vertically.
-    lstm_outputs = tf.reshape(lstm_outputs, [-1, lstm_cell.output_size])
 
+    reshaped_output = tf.reshape(self.training_decoder_output.rnn_output, [-1, self.training_decoder_output.rnn_output.shape[2]])
+    self.logits = reshaped_output
+
+    '''
+    # No need for this because we have projection layer
     with tf.variable_scope("logits") as logits_scope:
       logits = tf.contrib.layers.fully_connected(
           inputs=lstm_outputs,
@@ -337,13 +419,20 @@ class ShowAndTellModel(object):
           weights_initializer=self.initializer,
           scope=logits_scope)
 
+      self.logits = logits
+    '''
+
+
+
     if self.mode == "inference":
+      logits=self.logits
       tf.nn.softmax(logits, name="softmax")
     else:
       targets = tf.reshape(self.target_seqs, [-1])
       weights = tf.to_float(tf.reshape(self.input_mask, [-1]))
 
       # Compute losses.
+      logits = self.logits
       losses = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=targets,
                                                               logits=logits)
       batch_loss = tf.div(tf.reduce_sum(tf.multiply(losses, weights)),
@@ -361,6 +450,7 @@ class ShowAndTellModel(object):
       self.total_loss = total_loss
       self.target_cross_entropy_losses = losses  # Used in evaluation.
       self.target_cross_entropy_loss_weights = weights  # Used in evaluation.
+
 
   def setup_inception_initializer(self):
     """Sets up the function to restore inception variables from checkpoint."""

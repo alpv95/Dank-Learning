@@ -45,7 +45,7 @@ tf.flags.DEFINE_string("eval_dir", "", "Directory to write event logs.")
 
 tf.flags.DEFINE_integer("eval_interval_secs", 600,
                         "Interval between evaluation runs.")
-tf.flags.DEFINE_integer("num_eval_examples", 8,
+tf.flags.DEFINE_integer("num_eval_examples", 105,
                         "Number of examples for evaluation.")
 
 tf.flags.DEFINE_integer("min_global_step", 100,
