@@ -106,11 +106,13 @@ def main(_):
   print(len(meme_embeddings))
   print(meme_embeddings)
   '''
+  #configuration
+  config = configuration.ModelConfig()
   # Build the inference graph.
   g = tf.Graph()
   with g.as_default():
     model = inference_wrapper.InferenceWrapper()
-    restore_fn = model.build_graph_from_config(configuration.ModelConfig(),
+    restore_fn = model.build_graph_from_config(config,
                                                FLAGS.checkpoint_path)
   g.finalize()
 
@@ -143,7 +145,7 @@ def main(_):
     # beam search parameters. See caption_generator.py for a description of the
     # available beam search parameters.
 
-    generator = caption_generator.CaptionGenerator(model, vocab)
+    generator = caption_generator.CaptionGenerator(model, vocab,beam_size=config.beam_size)
 
     num_in_data_total = 0
     num_captions = 0

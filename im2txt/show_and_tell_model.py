@@ -242,7 +242,7 @@ class ShowAndTellModel(object):
     '''
 
     #self.seq_embeddings = seq_embeddings
-    self.seq_embeddings = tf.placeholder(dtype=tf.float32, shape=[None,1,300],name="seq_embeddings")
+    self.seq_embeddings = tf.placeholder(dtype=tf.float32, shape=[1,self.config.beam_size,300],name="seq_embeddings")
 
   def build_model(self):
     """Builds the model.
@@ -285,15 +285,21 @@ class ShowAndTellModel(object):
 
         # Placeholder for feeding a batch of concatenated states.
         state_feed = tf.placeholder(dtype=tf.float32,
-                                    shape=[None, sum(lstm_cell.state_size)],
+                                    shape=[1,self.config.beam_size, sum(lstm_cell.state_size)],
                                     name="state_feed")
 
-        state_tuple = tf.split(value=state_feed, num_or_size_splits=2, axis=1)
+        #state_tuple = tf.split(value=state_feed, num_or_size_splits=2, axis=1)
+        state_tuple = tf.split(value=state_feed, num_or_size_splits=2, axis=2)
 
         # Run a single LSTM step.
+        '''
         lstm_outputs, state_tuple = lstm_cell(
             inputs=tf.squeeze(self.seq_embeddings, axis=[1]),
             state=state_tuple)
+        '''
+        lstm_outputs, state_tuple = lstm_cell(
+            inputs=tf.squeeze(self.seq_embeddings, axis=[0]),
+            state=[tf.squeeze(x,axis=0) for x in state_tuple])
 
         # Concatentate the resulting state.
         tf.concat(axis=1, values=state_tuple, name="state")

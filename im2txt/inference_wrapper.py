@@ -25,7 +25,6 @@ import sys
 sys.path.insert(0, '/Users/ALP/PycharmProjects/MemeProject/im2txt/inference_utils')
 import inference_wrapper_base
 import numpy as np
-import tensorflow as tf
 
 
 class InferenceWrapper(inference_wrapper_base.InferenceWrapperBase):
@@ -55,12 +54,12 @@ class InferenceWrapper(inference_wrapper_base.InferenceWrapperBase):
 
     #input_feed shape = [beam_size]
     #state_feed shape = [beam_size, 1024]
-    print(input_feed.shape)
+
     embeddings = []
     for i, feed in enumerate(input_feed):
       embeddings.append(np.take(self.embeddings, feed, 0))
     embeddings = np.array(embeddings)
-    embeddings = np.expand_dims(embeddings, axis=1)
+    embeddings = np.expand_dims(embeddings, axis=0)
     # self.embeddings [38521, 300]
     # input_feed [2, 38521]
     # [1, 2, 300]
@@ -70,7 +69,7 @@ class InferenceWrapper(inference_wrapper_base.InferenceWrapperBase):
         fetches=["softmax:0", "lstm/state:0"],
         feed_dict={
             #"input_feed:0": input_feed,
-            "lstm/state_feed:0": state_feed,
+            "lstm/state_feed:0": np.expand_dims(state_feed,axis=0),
             "seq_embeddings:0": embeddings,
             #"seq_embedding/embedding_map:0": self.embedding_map
         })
