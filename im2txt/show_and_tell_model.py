@@ -137,13 +137,16 @@ class ShowAndTellModel(object):
     if self.mode == "inference":
       # In inference mode, images and inputs are fed via placeholders.
       image_feed = tf.placeholder(dtype=tf.string, shape=[], name="image_feed")
+
+      #no longer need input_feed as we feed straight in as seq_embeddings
+      '''
       input_feed = tf.placeholder(dtype=tf.int64,
                                   shape=[None],  # batch_size
                                   name="input_feed")
-
+      '''
       # Process image and insert batch dimensions.
       images = tf.expand_dims(self.process_image(image_feed), 0)
-      input_seqs = tf.expand_dims(input_feed, 1)
+      #input_seqs = tf.expand_dims(input_feed, 1)
 
       # No target sequences or input mask in inference mode.
       target_seqs = None
@@ -182,7 +185,7 @@ class ShowAndTellModel(object):
                                            queue_capacity=queue_capacity))
 
     self.images = images
-    self.input_seqs = input_seqs
+    #self.input_seqs = input_seqs
     self.target_seqs = target_seqs
     self.input_mask = input_mask
 
@@ -226,7 +229,7 @@ class ShowAndTellModel(object):
     Outputs:
       self.seq_embeddings
     """
-
+    '''
     with tf.variable_scope("seq_embedding"): #tf.device("/cpu:0"):
       #embedding_map = tf.get_variable(
           #name="map",
@@ -236,8 +239,10 @@ class ShowAndTellModel(object):
                                   shape=[self.config.vocab_size,300],
                                   name="embedding_map")
       seq_embeddings = tf.nn.embedding_lookup(embedding_map, self.input_seqs)
+    '''
 
-    self.seq_embeddings = seq_embeddings
+    #self.seq_embeddings = seq_embeddings
+    self.seq_embeddings = tf.placeholder(dtype=tf.float32, shape=[None,1,300],name="seq_embeddings")
 
   def build_model(self):
     """Builds the model.
