@@ -19,11 +19,13 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-
+import os
 import show_and_tell_model
 import sys
-sys.path.insert(0, '/data/alpv95/MemeProject/im2txt/inference_utils')
+sys.path.insert(0, '/Users/ALP/PycharmProjects/MemeProject/im2txt/inference_utils')
 import inference_wrapper_base
+import numpy as np
+import tensorflow as tf
 
 
 class InferenceWrapper(inference_wrapper_base.InferenceWrapperBase):
@@ -31,6 +33,7 @@ class InferenceWrapper(inference_wrapper_base.InferenceWrapperBase):
 
   def __init__(self):
     super(InferenceWrapper, self).__init__()
+    self.embedding_map = np.loadtxt('REAL_EMBEDDING_MATRIX',dtype=np.float32)
 
   def build_model(self, model_config):
     model = show_and_tell_model.ShowAndTellModel(model_config, mode="inference")
@@ -48,5 +51,6 @@ class InferenceWrapper(inference_wrapper_base.InferenceWrapperBase):
         feed_dict={
             "input_feed:0": input_feed,
             "lstm/state_feed:0": state_feed,
+            "seq_embedding/embedding_map:0":self.embedding_map
         })
     return softmax_output, state_output, None

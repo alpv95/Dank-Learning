@@ -50,7 +50,7 @@ class ModelConfig(object):
     # for differences between tokenizer versions used in preprocessing. There is
     # no harm in using a value greater than the actual vocab size, but using a
     # value less than the actual vocab size will result in an error.
-    self.vocab_size = 38521 #38525 #44441
+    self.vocab_size = 38521 #38839 #38521 #38525 #44441
 
 
     # Number of threads for image preprocessing. Should be a multiple of 2.

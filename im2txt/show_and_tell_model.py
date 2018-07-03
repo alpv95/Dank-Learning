@@ -226,11 +226,15 @@ class ShowAndTellModel(object):
     Outputs:
       self.seq_embeddings
     """
-    with tf.variable_scope("seq_embedding"): #tf.device("/cpu:0"):
-      embedding_map = tf.get_variable(
-          name="map",
-          initializer=self.pretrained_glove, trainable=True ,dtype=tf.float32)
 
+    with tf.variable_scope("seq_embedding"): #tf.device("/cpu:0"):
+      #embedding_map = tf.get_variable(
+          #name="map",
+          #initializer=self.pretrained_glove, trainable=True ,dtype=tf.float32)
+
+      embedding_map = tf.placeholder(dtype=tf.float32,
+                                  shape=[self.config.vocab_size,300],
+                                  name="embedding_map")
       seq_embeddings = tf.nn.embedding_lookup(embedding_map, self.input_seqs)
 
     self.seq_embeddings = seq_embeddings
@@ -278,6 +282,7 @@ class ShowAndTellModel(object):
         state_feed = tf.placeholder(dtype=tf.float32,
                                     shape=[None, sum(lstm_cell.state_size)],
                                     name="state_feed")
+
         state_tuple = tf.split(value=state_feed, num_or_size_splits=2, axis=1)
 
         # Run a single LSTM step.
