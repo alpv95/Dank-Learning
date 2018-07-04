@@ -5,6 +5,9 @@ im2txt/trainlog*
 im2txt/bvlc_alexnet.npy
 im2txt/eval.tfrecords*
 MemeNote.ipynb
+venv/
+REAL_EMBEDDING_MATRIX
+im2txt/*.pb
 
 #compiled source #
 ###################

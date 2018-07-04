@@ -22,7 +22,7 @@ from __future__ import print_function
 import os
 import show_and_tell_model
 import sys
-sys.path.insert(0, '/Users/ALP/PycharmProjects/MemeProject/im2txt/inference_utils')
+sys.path.insert(0, 'inference_utils')
 import inference_wrapper_base
 import numpy as np
 

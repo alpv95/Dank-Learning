@@ -33,7 +33,7 @@ import image_embedding
 import image_processing
 import inputs as input_ops
 import DankLSTM
-
+import DankFullyConnected
 
 class ShowAndTellModel(object):
   """Image-to-text implementation based on http://arxiv.org/abs/1411.4555.
@@ -64,7 +64,7 @@ class ShowAndTellModel(object):
         minval=-self.config.initializer_scale,
         maxval=self.config.initializer_scale)
 
-    self.pretrained_glove = tf.constant(np.loadtxt('embedding_matrix5',dtype=np.float32))
+    self.pretrained_glove = tf.constant(np.loadtxt('REAL_EMBEDDING_MATRIX',dtype=np.float32))
 
     # A float32 Tensor with shape [batch_size, height, width, channels].
     self.images = None
@@ -208,13 +208,13 @@ class ShowAndTellModel(object):
 
     # Map inception output into embedding space.
     with tf.variable_scope("image_embedding") as scope:
-      image_embeddings = tf.contrib.layers.fully_connected(
-          inputs=inception_output,
+      image_embeddings = tf.squeeze(DankFullyConnected.fully_connected(
+          inputs=tf.expand_dims(inception_output, 0),
           num_outputs=self.config.embedding_size,
           activation_fn=None,
           weights_initializer=self.initializer,
           biases_initializer=None,
-          scope=scope)
+          scope=scope), 0)
 
     # Save the embedding size in the graph.
     tf.constant(self.config.embedding_size, name="embedding_size")

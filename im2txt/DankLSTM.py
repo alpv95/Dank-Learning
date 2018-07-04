@@ -28,6 +28,7 @@ from tensorflow.python.ops import rnn_cell_impl
 from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.util import nest
 
+from show_tb import show_tb
 
 _BIAS_VARIABLE_NAME = "bias"
 _WEIGHTS_VARIABLE_NAME = "kernel"
@@ -367,6 +368,7 @@ class BasicLSTMCell(LayerRNNCell): #DANK
     else:
       c, h = array_ops.split(value=state, num_or_size_splits=2, axis=one)
 
+    print("About to decide if splitting")
     if len(inputs.get_shape().as_list()) == 2:
 
       gate_inputs = math_ops.matmul(
@@ -377,7 +379,7 @@ class BasicLSTMCell(LayerRNNCell): #DANK
       i, j, f, o = array_ops.split(
           value=gate_inputs, num_or_size_splits=4, axis=one)
     else:
-
+      print("It's splitting")
       split = array_ops.split(array_ops.concat([inputs, h], 2), 2, axis=1)
       gate_inputs_0 = array_ops.expand_dims(math_ops.matmul(
           array_ops.squeeze(split[0], 0), self._kernel), 0)

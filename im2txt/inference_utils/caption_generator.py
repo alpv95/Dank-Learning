@@ -115,7 +115,7 @@ class CaptionGenerator(object):
                model,
                vocab,
                beam_size=2,
-	       temperature=1.2,
+	             temperature=1.2,
                max_caption_length=20,
                length_normalization_factor=0.2):
     """Initializes the generator.
