@@ -8,6 +8,7 @@ MemeNote.ipynb
 venv/
 REAL_EMBEDDING_MATRIX
 *.pb
+*.mlmodel
 
 #compiled source #
 ###################

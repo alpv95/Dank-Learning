@@ -205,7 +205,8 @@ class CaptionGenerator(object):
                                                                 np.expand_dims(state_feed,axis=0))
 
       for i, partial_caption in enumerate(partial_captions_list):
-        word_probabilities = softmax[i]
+        # print(softmax)
+        word_probabilities = softmax[0][i]
         word_probabilities[self.vocab.unk_id] = 0 #set UNK prob to zero
         #word_probabilities[self.vocab.end_id] *= 0.5 #try lowering probability of sentence ending, longer captions
         state = np.squeeze(new_states)[i]

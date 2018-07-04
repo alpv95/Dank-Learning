@@ -208,13 +208,13 @@ class ShowAndTellModel(object):
 
     # Map inception output into embedding space.
     with tf.variable_scope("image_embedding") as scope:
-      image_embeddings = tf.squeeze(DankFullyConnected.fully_connected(
-          inputs=tf.expand_dims(inception_output, 0),
+      image_embeddings = tf.contrib.layers.fully_connected(
+          inputs=inception_output,
           num_outputs=self.config.embedding_size,
           activation_fn=None,
           weights_initializer=self.initializer,
           biases_initializer=None,
-          scope=scope), 0)
+          scope=scope)
 
     # Save the embedding size in the graph.
     tf.constant(self.config.embedding_size, name="embedding_size")
@@ -318,10 +318,10 @@ class ShowAndTellModel(object):
                                             scope=lstm_scope)
 
     # Stack batches vertically.
-    lstm_outputs = tf.reshape(lstm_outputs, [-1, lstm_cell.output_size])
+    # lstm_outputs = tf.reshape(lstm_outputs, [-1, lstm_cell.output_size])
 
     with tf.variable_scope("logits") as logits_scope:
-      logits = tf.contrib.layers.fully_connected(
+      logits = DankFullyConnected.fully_connected(
           inputs=lstm_outputs,
           num_outputs=self.config.vocab_size,
           activation_fn=None,

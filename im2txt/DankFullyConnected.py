@@ -393,9 +393,19 @@ class Dense(base.Layer):
     inputs = ops.convert_to_tensor(inputs, dtype=self.dtype)
     shape = inputs.get_shape().as_list()
     if len(shape) > 2:
+      print("MATMUL(TENSORDOT) w/ SPLITTING")
+      # Le new method
+      split = array_ops.split(inputs, 2, axis=1)
+      outputs_0 = array_ops.expand_dims(math_ops.matmul(
+          array_ops.squeeze(split[0], 0), self.kernel), 0)
+      outputs_1 = array_ops.expand_dims(math_ops.matmul(
+          array_ops.squeeze(split[1], 0), self.kernel), 0)
+      outputs = array_ops.concat([outputs_0,outputs_1],axis=1)
+
+
       # Broadcasting is required for the inputs.
-      outputs = standard_ops.tensordot(inputs, self.kernel, [[len(shape) - 1],
-                                                             [0]])
+      # outputs = standard_ops.tensordot(inputs, self.kernel, [[len(shape) - 1],
+                                                            #  [0]])
       # Reshape the output back to the original ndim of the input.
       if not context.executing_eagerly():
         output_shape = shape[:-1] + [self.units]
