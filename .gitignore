@@ -7,7 +7,7 @@ im2txt/eval.tfrecords*
 MemeNote.ipynb
 venv/
 REAL_EMBEDDING_MATRIX
-im2txt/*.pb
+*.pb
 
 #compiled source #
 ###################
