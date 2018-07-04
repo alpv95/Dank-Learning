@@ -262,7 +262,7 @@ class ShowAndTellModel(object):
     # This LSTM cell has biases and outputs tanh(new_c) * sigmoid(o), but the
     # modified LSTM in the "Show and Tell" paper has no biases and outputs
     # new_c * sigmoid(o).
-    lstm_cell = DankLSTM.DankLSTMCell(
+    lstm_cell = DankLSTM.BasicLSTMCell(
         num_units=self.config.num_lstm_units, state_is_tuple=True)
     if self.mode == "train":
       lstm_cell = tf.contrib.rnn.DropoutWrapper(
@@ -299,11 +299,14 @@ class ShowAndTellModel(object):
             state=state_tuple)
         '''
         lstm_outputs, state_tuple = lstm_cell(
-            inputs=tf.squeeze(self.seq_embeddings, axis=[0]),
-            state=[tf.squeeze(x,axis=0) for x in state_tuple])
+            inputs=self.seq_embeddings,
+            state=state_tuple)
 
+        print('lstm_outputs',lstm_outputs)
+        print('state_tuple',state_tuple)
         # Concatentate the resulting state.
-        tf.concat(axis=1, values=state_tuple, name="state")
+        #tf.concat(axis=1, values=state_tuple, name="state")
+        tf.concat(axis=2, values=state_tuple, name="state")
       else:
         # Run the batch of sequence embeddings through the LSTM.
         sequence_length = tf.reduce_sum(self.input_mask, 1)

@@ -69,7 +69,7 @@ class InferenceWrapper(inference_wrapper_base.InferenceWrapperBase):
         fetches=["softmax:0", "lstm/state:0"],
         feed_dict={
             #"input_feed:0": input_feed,
-            "lstm/state_feed:0": np.expand_dims(state_feed,axis=0),
+            "lstm/state_feed:0": state_feed,
             "seq_embeddings:0": embeddings,
             #"seq_embedding/embedding_map:0": self.embedding_map
         })

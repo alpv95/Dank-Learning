@@ -202,13 +202,13 @@ class CaptionGenerator(object):
 
       softmax, new_states, metadata = self.model.inference_step(sess,
                                                                 input_feed,
-                                                                state_feed)
+                                                                np.expand_dims(state_feed,axis=0))
 
       for i, partial_caption in enumerate(partial_captions_list):
         word_probabilities = softmax[i]
         word_probabilities[self.vocab.unk_id] = 0 #set UNK prob to zero
         #word_probabilities[self.vocab.end_id] *= 0.5 #try lowering probability of sentence ending, longer captions
-        state = new_states[i]
+        state = np.squeeze(new_states)[i]
         # For this partial caption, get the beam_size most probable next words.
         words_and_probs = list(enumerate(word_probabilities))
         words_and_probs.sort(key=lambda x: -x[1])

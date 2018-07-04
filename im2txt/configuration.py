@@ -51,7 +51,7 @@ class ModelConfig(object):
     # no harm in using a value greater than the actual vocab size, but using a
     # value less than the actual vocab size will result in an error.
     self.vocab_size = 38521 #38839 #38521 #38525 #44441
-    self.beam_size = 3
+    self.beam_size = 2
 
 
     # Number of threads for image preprocessing. Should be a multiple of 2.
