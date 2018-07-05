@@ -145,7 +145,7 @@ def main(_):
     # beam search parameters. See caption_generator.py for a description of the
     # available beam search parameters.
 
-    generator = caption_generator.CaptionGenerator(model, vocab,beam_size=config.beam_size)
+    generator = caption_generator.CaptionGenerator(model, vocab, beam_size=config.beam_size)
 
     num_in_data_total = 0
     num_captions = 0

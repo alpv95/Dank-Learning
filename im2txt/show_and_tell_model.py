@@ -137,7 +137,8 @@ class ShowAndTellModel(object):
     """
     if self.mode == "inference":
       # In inference mode, images and inputs are fed via placeholders.
-      image_feed = tf.placeholder(dtype=tf.string, shape=[], name="image_feed")
+      #image_feed = tf.placeholder(dtype=tf.string, shape=[], name="image_feed")
+      image_feed = tf.placeholder(dtype=tf.float32, shape=[self.config.image_height, self.config.image_width, 3], name="image_feed")
 
       #no longer need input_feed as we feed straight in as seq_embeddings
       '''
@@ -146,7 +147,8 @@ class ShowAndTellModel(object):
                                   name="input_feed")
       '''
       # Process image and insert batch dimensions.
-      images = tf.expand_dims(self.process_image(image_feed), 0)
+      #images = tf.expand_dims(self.process_image(image_feed), 0)
+      images = tf.expand_dims(image_feed, 0)
       #input_seqs = tf.expand_dims(input_feed, 1)
 
       # No target sequences or input mask in inference mode.
@@ -302,8 +304,8 @@ class ShowAndTellModel(object):
             inputs=self.seq_embeddings,
             state=state_tuple)
 
-        print('lstm_outputs',lstm_outputs)
-        print('state_tuple',state_tuple)
+        #print('lstm_outputs',lstm_outputs)
+        #print('state_tuple',state_tuple)
         # Concatentate the resulting state.
         #tf.concat(axis=1, values=state_tuple, name="state")
         tf.concat(axis=2, values=state_tuple, name="state")
