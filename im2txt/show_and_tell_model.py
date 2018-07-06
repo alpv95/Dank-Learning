@@ -289,7 +289,7 @@ class ShowAndTellModel(object):
         # Placeholder for feeding a batch of concatenated states.
         state_feed = tf.placeholder(dtype=tf.float32,
                                     shape=[1,self.config.beam_size, sum(lstm_cell.state_size)],
-                                    name="state_feed")
+                                    name="state_feed") #+ tf.constant(0.25,shape=[1,self.config.beam_size, sum(lstm_cell.state_size)])
 
         #state_tuple = tf.split(value=state_feed, num_or_size_splits=2, axis=1)
         state_tuple = tf.split(value=state_feed, num_or_size_splits=2, axis=2)
