@@ -19,6 +19,7 @@ from tensorflow.python.ops import clip_ops
 from tensorflow.python.ops import init_ops
 from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import nn_ops
+from tensorflow.python.ops import standard_ops
 from tensorflow.python.ops import partitioned_variables
 from tensorflow.python.ops import random_ops
 from tensorflow.python.ops import tensor_array_ops
@@ -378,15 +379,35 @@ class BasicLSTMCell(LayerRNNCell): #DANK
       # i = input_gate, j = new_input, f = forget_gate, o = output_gate
       i, j, f, o = array_ops.split(
           value=gate_inputs, num_or_size_splits=4, axis=one)
+
     else:
       print("It's splitting")
       split = array_ops.split(array_ops.concat([inputs, h], 2), 2, axis=1)
-      gate_inputs_0 = array_ops.expand_dims(math_ops.matmul(
-          array_ops.squeeze(split[0], 0), self._kernel), 0)
-      gate_inputs_1 = array_ops.expand_dims(math_ops.matmul(
-          array_ops.squeeze(split[1], 0), self._kernel), 0)
-      gate_inputs = array_ops.concat([gate_inputs_0,gate_inputs_1],axis=1)
+      #gate_inputs = array_ops.expand_dims(math_ops.matmul(
+          #array_ops.squeeze(array_ops.concat([inputs, h], 2),axis=0), self._kernel),0)
+      #gate_inputs = nn_ops.bias_add(gate_inputs, self._bias)
 
+      '''
+      gate_inputs = standard_ops.tensordot(array_ops.concat([inputs, h], 2), self._kernel, [[len(inputs.get_shape().as_list()) - 1],
+                                                              [0]])
+      gate_inputs = nn_ops.bias_add(gate_inputs, self._bias)
+
+      # Reshape the output back to the original ndim of the input.
+      if not context.executing_eagerly():
+        output_shape = inputs.get_shape().as_list()[:-1] + [self._kernel.get_shape().as_list()[-1]]
+        gate_inputs.set_shape(output_shape)
+      '''
+
+
+      gate_inputs_0 = math_ops.matmul(
+         split[0], array_ops.expand_dims(self._kernel,0))
+      print('gate_inputs0',gate_inputs_0)
+      gate_inputs_1 = math_ops.matmul(
+          split[1], array_ops.expand_dims(self._kernel,0))
+      print('gate_inputs1',gate_inputs_1)
+      gate_inputs = array_ops.concat([gate_inputs_0,gate_inputs_1],axis=1)
+      print(self._kernel)
+      print('gate_inputs',gate_inputs)
       gate_inputs = nn_ops.bias_add(gate_inputs, self._bias)
 
       # i = input_gate, j = new_input, f = forget_gate, o = output_gate

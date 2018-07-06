@@ -396,30 +396,32 @@ class Dense(base.Layer):
       print("MATMUL(TENSORDOT) w/ SPLITTING")
       # Le new method
       split = array_ops.split(inputs, 2, axis=1)
-      outputs_0 = array_ops.expand_dims(math_ops.matmul(
-          array_ops.squeeze(split[0], 0), self.kernel), 0)
-      outputs_1 = array_ops.expand_dims(math_ops.matmul(
-          array_ops.squeeze(split[1], 0), self.kernel), 0)
+      outputs_0 = math_ops.matmul(
+          split[0], array_ops.expand_dims(self.kernel,0))
+      outputs_1 = math_ops.matmul(
+          split[1], array_ops.expand_dims(self.kernel,0))
       outputs = array_ops.concat([outputs_0,outputs_1],axis=1)
 
-
+      '''
       # Broadcasting is required for the inputs.
-      # outputs = standard_ops.tensordot(inputs, self.kernel, [[len(shape) - 1],
-                                                            #  [0]])
+      outputs = standard_ops.tensordot(inputs, self.kernel, [[len(shape) - 1],
+                                                              [0]])
       # Reshape the output back to the original ndim of the input.
       if not context.executing_eagerly():
         output_shape = shape[:-1] + [self.units]
         outputs.set_shape(output_shape)
+      '''
     else:
       print("MATMUL w/ SPLITTING")
       # Le olde method
-      # outputs = gen_math_ops.mat_mul(inputs, self.kernel)
-      split = array_ops.split(inputs, 2, axis=1)
-      outputs_0 = array_ops.expand_dims(math_ops.matmul(
-          array_ops.squeeze(split[0], 0), self.kernel), 0)
-      outputs_1 = array_ops.expand_dims(math_ops.matmul(
-          array_ops.squeeze(split[1], 0), self.kernel), 0)
-      outputs = array_ops.concat([outputs_0,outputs_1],axis=1)
+      outputs = gen_math_ops.mat_mul(inputs, self.kernel)
+
+      #split = array_ops.split(inputs, 2, axis=1)
+      #outputs_0 = array_ops.expand_dims(math_ops.matmul(
+          #array_ops.squeeze(split[0], 0), self.kernel), 0)
+      #outputs_1 = array_ops.expand_dims(math_ops.matmul(
+          #array_ops.squeeze(split[1], 0), self.kernel), 0)
+      #outputs = array_ops.concat([outputs_0,outputs_1],axis=1)
     if self.use_bias:
       outputs = nn.bias_add(outputs, self.bias)
     if self.activation is not None:

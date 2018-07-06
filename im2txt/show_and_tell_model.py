@@ -321,7 +321,8 @@ class ShowAndTellModel(object):
 
     # Stack batches vertically.
     # lstm_outputs = tf.reshape(lstm_outputs, [-1, lstm_cell.output_size])
-
+    print('lstm_outputs',lstm_outputs)
+    print('state_output',state_tuple)
     with tf.variable_scope("logits") as logits_scope:
       logits = DankFullyConnected.fully_connected(
           inputs=lstm_outputs,
