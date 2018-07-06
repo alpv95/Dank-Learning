@@ -397,9 +397,9 @@ class Dense(base.Layer):
       # Le new method
       split = array_ops.split(inputs, 2, axis=1)
       outputs_0 = math_ops.matmul(
-          split[0], array_ops.expand_dims(self.kernel,0))
+          split[0], self.kernel)
       outputs_1 = math_ops.matmul(
-          split[1], array_ops.expand_dims(self.kernel,0))
+          split[1], self.kernel)
       outputs = array_ops.concat([outputs_0,outputs_1],axis=1)
 
       '''

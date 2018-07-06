@@ -400,10 +400,10 @@ class BasicLSTMCell(LayerRNNCell): #DANK
 
 
       gate_inputs_0 = math_ops.matmul(
-         split[0], array_ops.expand_dims(self._kernel,0))
+         split[0], self._kernel)
       print('gate_inputs0',gate_inputs_0)
       gate_inputs_1 = math_ops.matmul(
-          split[1], array_ops.expand_dims(self._kernel,0))
+          split[1], self._kernel)
       print('gate_inputs1',gate_inputs_1)
       gate_inputs = array_ops.concat([gate_inputs_0,gate_inputs_1],axis=1)
       print(self._kernel)
