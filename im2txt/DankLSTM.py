@@ -31,6 +31,10 @@ from tensorflow.python.util import nest
 
 from show_tb import show_tb
 
+from DankMethods import split4d, splittingMatMul
+
+import pdb
+
 _BIAS_VARIABLE_NAME = "bias"
 _WEIGHTS_VARIABLE_NAME = "kernel"
 
@@ -268,7 +272,6 @@ class LayerRNNCell(RNNCell):
                                      *args, **kwargs)
 
 
-
 class BasicLSTMCell(LayerRNNCell): #DANK
   """Basic LSTM recurrent network cell.
 
@@ -313,7 +316,7 @@ class BasicLSTMCell(LayerRNNCell): #DANK
                    "deprecated.  Use state_is_tuple=True.", self)
 
     # Inputs must be 2-dimensional.
-    self.input_spec = base_layer.InputSpec(max_ndim=3, min_ndim=2)
+    self.input_spec = base_layer.InputSpec(max_ndim=4, min_ndim=2)
 
     self._num_units = num_units
     self._forget_bias = forget_bias
@@ -362,57 +365,35 @@ class BasicLSTMCell(LayerRNNCell): #DANK
         `state_is_tuple`).
     """
     sigmoid = math_ops.sigmoid
-    one = constant_op.constant(1, dtype=dtypes.int32)
     # Parameters of gates are concatenated into one multiply for efficiency.
     if self._state_is_tuple:
       c, h = state
     else:
-      c, h = array_ops.split(value=state, num_or_size_splits=2, axis=one)
+      c, h = split4d(value=state, num_or_size_splits=2, axis=1)
 
     print("About to decide if splitting")
     if len(inputs.get_shape().as_list()) == 2:
 
-      gate_inputs = math_ops.matmul(
+      gate_inputs = splittingMatMul(
           array_ops.concat([inputs, h], 1), self._kernel)
       gate_inputs = nn_ops.bias_add(gate_inputs, self._bias)
 
       # i = input_gate, j = new_input, f = forget_gate, o = output_gate
-      i, j, f, o = array_ops.split(
-          value=gate_inputs, num_or_size_splits=4, axis=one)
+      print("FIRST", gate_inputs.shape)
+      x = split4d(
+          value=gate_inputs, num_or_size_splits=4, axis=1)
+      i, j, f, o = x[0], x[1], x[2], x[3]
 
     else:
-      print("It's splitting")
-      split = array_ops.split(array_ops.concat([inputs, h], 2), 2, axis=1)
-      #gate_inputs = array_ops.expand_dims(math_ops.matmul(
-          #array_ops.squeeze(array_ops.concat([inputs, h], 2),axis=0), self._kernel),0)
-      #gate_inputs = nn_ops.bias_add(gate_inputs, self._bias)
-
-      '''
-      gate_inputs = standard_ops.tensordot(array_ops.concat([inputs, h], 2), self._kernel, [[len(inputs.get_shape().as_list()) - 1],
-                                                              [0]])
-      gate_inputs = nn_ops.bias_add(gate_inputs, self._bias)
-
-      # Reshape the output back to the original ndim of the input.
-      if not context.executing_eagerly():
-        output_shape = inputs.get_shape().as_list()[:-1] + [self._kernel.get_shape().as_list()[-1]]
-        gate_inputs.set_shape(output_shape)
-      '''
-
-
-      gate_inputs_0 = math_ops.matmul(
-         split[0], array_ops.expand_dims(self._kernel,0))
-      print('gate_inputs0',gate_inputs_0)
-      gate_inputs_1 = math_ops.matmul(
-          split[1], array_ops.expand_dims(self._kernel,0))
-      print('gate_inputs1',gate_inputs_1)
-      gate_inputs = array_ops.concat([gate_inputs_0,gate_inputs_1],axis=1)
-      print(self._kernel)
-      print('gate_inputs',gate_inputs)
+      gate_inputs = splittingMatMul(
+          tf.squeeze(array_ops.concat([inputs, h], 2), 0), self._kernel)
       gate_inputs = nn_ops.bias_add(gate_inputs, self._bias)
 
       # i = input_gate, j = new_input, f = forget_gate, o = output_gate
-      i, j, f, o = array_ops.split(
-          value=gate_inputs, num_or_size_splits=4, axis=2)
+      print("SECOND", gate_inputs.shape)
+      x = split4d(
+          value=gate_inputs, num_or_size_splits=4, axis=1)
+      i, j, f, o = x[0], x[1], x[2], x[3]
 
 
     forget_bias_tensor = constant_op.constant(self._forget_bias, dtype=f.dtype)

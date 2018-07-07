@@ -292,7 +292,11 @@ class ShowAndTellModel(object):
                                     name="state_feed") #+ tf.constant(0.25,shape=[1,self.config.beam_size, sum(lstm_cell.state_size)])
 
         #state_tuple = tf.split(value=state_feed, num_or_size_splits=2, axis=1)
-        state_tuple = tf.split(value=state_feed, num_or_size_splits=2, axis=2)
+        # raise Exception('Why')
+        # state_feed is (1, 2, 1024), needs to be (1, 1, 2, 1024) -> (1, 1, 2, 512) -> 1, 
+        # state_tuple = [(1, 2, 512), (1, 2, 512)]
+        x = [tf.squeeze(y, 0) for y in tf.split(value=tf.expand_dims(state_feed, 0), num_or_size_splits=2, axis=3)]
+        state_tuple = (x[0], x[1])
 
         # Run a single LSTM step.
         '''

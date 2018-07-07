@@ -35,6 +35,7 @@ from tensorflow.python.ops import variable_scope
 from tensorflow.python.ops import variables as tf_variables
 from tensorflow.python.training import moving_averages
 
+from DankMethods import split4d, splittingMatMul
 
 # from tensorflow.python.framework import ops
 # from tensorflow.python.framework import tensor_shape
@@ -393,28 +394,18 @@ class Dense(base.Layer):
     inputs = ops.convert_to_tensor(inputs, dtype=self.dtype)
     shape = inputs.get_shape().as_list()
     if len(shape) > 2:
-      print("MATMUL(TENSORDOT) w/ SPLITTING")
-      # Le new method
-      split = array_ops.split(inputs, 2, axis=1)
-      outputs_0 = math_ops.matmul(
-          split[0], array_ops.expand_dims(self.kernel,0))
-      outputs_1 = math_ops.matmul(
-          split[1], array_ops.expand_dims(self.kernel,0))
-      outputs = array_ops.concat([outputs_0,outputs_1],axis=1)
+      print("MATMUL(TENSORDOT) w/out SPLITTING")
 
-      '''
       # Broadcasting is required for the inputs.
-      outputs = standard_ops.tensordot(inputs, self.kernel, [[len(shape) - 1],
-                                                              [0]])
+      outputs = splittingMatMul(inputs, self.kernel)
       # Reshape the output back to the original ndim of the input.
       if not context.executing_eagerly():
         output_shape = shape[:-1] + [self.units]
         outputs.set_shape(output_shape)
-      '''
     else:
-      print("MATMUL w/ SPLITTING")
+      print("MATMUL w/out SPLITTING")
       # Le olde method
-      outputs = gen_math_ops.mat_mul(inputs, self.kernel)
+      outputs = splittingMatMul(inputs, self.kernel)
 
       #split = array_ops.split(inputs, 2, axis=1)
       #outputs_0 = array_ops.expand_dims(math_ops.matmul(
