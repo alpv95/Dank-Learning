@@ -399,9 +399,9 @@ class Dense(base.Layer):
       # Broadcasting is required for the inputs.
       outputs = splittingMatMul(inputs, self.kernel)
       # Reshape the output back to the original ndim of the input.
-      if not context.executing_eagerly():
-        output_shape = shape[:-1] + [self.units]
-        outputs.set_shape(output_shape)
+      # if not context.executing_eagerly():
+        # output_shape = shape[:-1] + [self.units]
+        # outputs.set_shape(output_shape)
     else:
       print("MATMUL w/out SPLITTING")
       # Le olde method

@@ -22,7 +22,31 @@ def split4d(**kwargs):
     value = array_ops.expand_dims(value, 0)
     axis += 1
     num_squeezes += 1
-  return [squeeze(y, num_squeezes) for y in array_ops.split(value=value, axis=axis, **kwargs)]
+
+  reversePermutationNeeded = False
+  reversePerm = None
+  if axis != 3:
+    reversePermutationNeeded = True
+    """
+    axis 0: [3, 2, 1, 0]
+    axis 1: [2, 3, 0, 1]
+    axis 2: [1, 0, 3, 2]
+    axis 3: [0, 1, 2, 3]
+    """
+    if axis == 0:
+      reversePerm = [3, 2, 1, 0]
+    elif axis == 1:
+      reversePerm = [2, 3, 0, 1]
+    elif axis == 2:
+      reversePerm = [1, 0, 3, 2]
+
+    # Permute needed if not along channel axis
+    value = array_ops.transpose(value, reversePerm)
+
+  value = array_ops.split(value=value, axis=3, **kwargs)
+  if reversePermutationNeeded:
+    value = [array_ops.transpose(y, reversePerm) for y in value]
+  return [squeeze(y, num_squeezes) for y in value]
 
 #Author: A.Polino
 def is_power2(num):
@@ -31,11 +55,20 @@ def is_power2(num):
 
 def calcSplits(num):
   num = int(num)
-  count = 0
+  count = 1
   while num > 1:
     count += 1
     num /= 2
   return count
+
+def addMatMul(val1, val2):
+  print("MATMUL###")
+  print(val1.shape)
+  print(val1)
+  print(val2.shape)
+  print(val2)
+  print("###")
+  return math_ops.mat_mul(val1, val2)
 
 def splittingMatMul(value1, value2):
   # value1 must be 2d
@@ -58,5 +91,7 @@ def splittingMatMul(value1, value2):
   numSplits = calcSplits(numSplits)
   print("NUMSPLITS", numSplits)
   splits = split4d(value=value1, num_or_size_splits=numSplits, axis=0)
-  muls = [expand(math_ops.mat_mul(split, value2), numExpands) for split in splits]
+  print(len(splits))
+  print(splits[0].shape)
+  muls = [expand(addMatMul(split, value2), numExpands) for split in splits]
   return array_ops.concat(muls, 0)
