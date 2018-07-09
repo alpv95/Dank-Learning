@@ -10,6 +10,12 @@ REAL_EMBEDDING_MATRIX
 *.pb
 *.mlmodel
 
+tf-coreml/build/
+tf-coreml/dist/
+tfcoreml.egg-info/
+.DS_Store
+tf-coreml/.idea/
+
 #compiled source #
 ###################
 *.pyc
