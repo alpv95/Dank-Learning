@@ -28,6 +28,7 @@ from tensorflow.python.ops import check_ops
 from tensorflow.python.ops import init_ops
 from tensorflow.python.ops import linalg_ops
 from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import special_math_ops
 from tensorflow.python.ops import nn
 from tensorflow.python.ops import sparse_ops
 from tensorflow.python.ops import standard_ops
@@ -395,11 +396,11 @@ class Dense(base.Layer):
     if len(shape) > 2:
       print("MATMUL(TENSORDOT) w/ SPLITTING")
       # Le new method
-      split = array_ops.split(inputs, 2, axis=1)
-      outputs_0 = math_ops.matmul(
-          split[0], self.kernel)
-      outputs_1 = math_ops.matmul(
-          split[1], self.kernel)
+      split = array_ops.split(array_ops.expand_dims(inputs,0), 2, axis=2)
+      outputs_0 = special_math_ops.einsum('ijn,nm->ijm',
+         array_ops.squeeze(split[0],0), self.kernel)
+      outputs_1 = special_math_ops.einsum('ijn,nm->ijm',
+         array_ops.squeeze(split[1],0), self.kernel)
       outputs = array_ops.concat([outputs_0,outputs_1],axis=1)
 
       '''

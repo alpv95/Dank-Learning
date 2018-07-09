@@ -18,6 +18,7 @@ from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import clip_ops
 from tensorflow.python.ops import init_ops
 from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import special_math_ops
 from tensorflow.python.ops import nn_ops
 from tensorflow.python.ops import standard_ops
 from tensorflow.python.ops import partitioned_variables
@@ -382,7 +383,9 @@ class BasicLSTMCell(LayerRNNCell): #DANK
 
     else:
       print("It's splitting")
-      split = array_ops.split(array_ops.concat([inputs, h], 2), 2, axis=1)
+      print('h',h)
+      print('inputs',inputs)
+      split = array_ops.split(array_ops.expand_dims(array_ops.concat([inputs, h], 2),0), 2, axis=2)
       #gate_inputs = array_ops.expand_dims(math_ops.matmul(
           #array_ops.squeeze(array_ops.concat([inputs, h], 2),axis=0), self._kernel),0)
       #gate_inputs = nn_ops.bias_add(gate_inputs, self._bias)
@@ -399,12 +402,13 @@ class BasicLSTMCell(LayerRNNCell): #DANK
       '''
 
 
-      gate_inputs_0 = math_ops.matmul(
-         split[0], self._kernel)
+      gate_inputs_0 = special_math_ops.einsum('ijn,nm->ijm',
+         array_ops.squeeze(split[0],0), self._kernel)
       print('gate_inputs0',gate_inputs_0)
-      gate_inputs_1 = math_ops.matmul(
-          split[1], self._kernel)
+      gate_inputs_1 = special_math_ops.einsum('ijn,nm->ijm',
+         array_ops.squeeze(split[1],0), self._kernel)
       print('gate_inputs1',gate_inputs_1)
+      print('squeeze',array_ops.squeeze(split[1]))
       gate_inputs = array_ops.concat([gate_inputs_0,gate_inputs_1],axis=1)
       print(self._kernel)
       print('gate_inputs',gate_inputs)
