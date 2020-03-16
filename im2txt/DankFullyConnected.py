@@ -397,7 +397,10 @@ class Dense(base.Layer):
       print("MATMUL(TENSORDOT) w/out SPLITTING")
 
       # Broadcasting is required for the inputs.
-      outputs = splittingMatMul(inputs, self.kernel)
+
+      #outputs = splittingMatMul(inputs, self.kernel)
+      outputs = math_ops.matmul(array_ops.squeeze(inputs,0), self.kernel, name="Fullymatmul")
+
       # Reshape the output back to the original ndim of the input.
       # if not context.executing_eagerly():
         # output_shape = shape[:-1] + [self.units]
@@ -405,7 +408,9 @@ class Dense(base.Layer):
     else:
       print("MATMUL w/out SPLITTING")
       # Le olde method
-      outputs = splittingMatMul(inputs, self.kernel)
+
+      #outputs = splittingMatMul(inputs, self.kernel)
+      outputs = math_ops.matmul(array_ops.squeeze(inputs,0), self.kernel, name="Fullymatmul2")
 
       #split = array_ops.split(inputs, 2, axis=1)
       #outputs_0 = array_ops.expand_dims(math_ops.matmul(

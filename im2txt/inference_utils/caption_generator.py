@@ -115,7 +115,7 @@ class CaptionGenerator(object):
                model,
                vocab,
                beam_size=2,
-	             temperature=1.2,
+	             temperature=2.4,
                max_caption_length=20,
                length_normalization_factor=0.2):
     """Initializes the generator.
@@ -246,4 +246,4 @@ class CaptionGenerator(object):
     if not complete_captions.size():
       complete_captions = partial_captions
 
-    return complete_captions.extract(sort=True)
+    return initial_state #complete_captions.extract(sort=True) #initial_state

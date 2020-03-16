@@ -374,8 +374,10 @@ class BasicLSTMCell(LayerRNNCell): #DANK
     print("About to decide if splitting")
     if len(inputs.get_shape().as_list()) == 2:
 
-      gate_inputs = splittingMatMul(
-          array_ops.concat([inputs, h], 1), self._kernel)
+      #gate_inputs = splittingMatMul(
+          #array_ops.concat([inputs, h], 1), self._kernel)
+      gate_inputs = math_ops.matmul(
+          array_ops.concat([inputs, h], 1), self._kernel, name="LSTMmatmul")
       gate_inputs = nn_ops.bias_add(gate_inputs, self._bias)
 
       # i = input_gate, j = new_input, f = forget_gate, o = output_gate
@@ -385,8 +387,10 @@ class BasicLSTMCell(LayerRNNCell): #DANK
       i, j, f, o = x[0], x[1], x[2], x[3]
 
     else:
-      gate_inputs = splittingMatMul(
-          tf.squeeze(array_ops.concat([inputs, h], 2), 0), self._kernel)
+      #gate_inputs = splittingMatMul(
+          #tf.squeeze(array_ops.concat([inputs, h], 2), 0), self._kernel)
+      gate_inputs = math_ops.matmul(
+          tf.squeeze(array_ops.concat([inputs, h], 2), 0), self._kernel, name="LSTMmatmul2")
       gate_inputs = nn_ops.bias_add(gate_inputs, self._bias)
 
       # i = input_gate, j = new_input, f = forget_gate, o = output_gate

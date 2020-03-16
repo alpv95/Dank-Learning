@@ -186,9 +186,13 @@ TEXT2=[' ',
 "i use a distribution",
 "so i took an arrow to the knee"]
 
-images_TA = ['im2txt/Jmemes/IMG_8140.jpg','im2txt/Jmemes/IMG_8174.jpg']
-TEXT1_TA = ["look at me","this guy is my dog"]
-TEXT2_TA = ["i'm a ginger"," "]
+images_TA = ['im2txt/Jmemes/296ec342-3e2c-4f01-a8bd-f5b6705d5118.JPG','im2txt/Jmemes/e4d055aa-c72b-4a77-a7bc-cdb00ec5a1bb.JPG','im2txt/Jmemes/37266d80-9923-4172-a3f8-f72b5974ef89.JPG', \
+            'im2txt/Jmemes/70e71770-42ce-4fd1-90ef-fc52b5903ab4.JPG','im2txt/Jmemes/852f8d3f-46cc-41c0-8133-e2ec354ac69b.JPG', 'im2txt/Jmemes/2a5c6b9a-935e-4ec2-951e-ff04ba1f77f0.JPG','im2txt/Jmemes/22d3087f-6021-44d3-ba55-716e9fb7a8b2.JPG', \
+            'im2txt/Jmemes/faa066f3-a5fc-4208-be91-429e141d3803.JPG', 'im2txt/Jmemes/6412c66b-513f-42bb-833e-e96b53bc1831.JPG','im2txt/Jmemes/f67f1988-244a-4f8d-af8d-728ae07f5594.JPG','im2txt/Jmemes/b06bdacc-3446-47c6-ab37-4297af427dc6.JPG']
+TEXT1_TA = ["i dont always drink beer, but when i do","i am a fucking camel","my names shane","a wild snorlax appeared?", \
+            "hey guys!!!!","i don't always dance , but when i do","what do you mean", "hey i just met you , and this is crazy", "no me digas", "that moment when","i played slender"]
+TEXT2_TA = ["i drink my own piss"," ","and this is so big", "more like a brother", \
+            "we have to talk about my dick","it's because i'm a stupid fucking idiot","you didn't have to do the dishes!", "my name is Kony", " ","you look up this meme"," "]
 
 for i,ting in enumerate(images_TA):
     color = (255, 255, 255)
