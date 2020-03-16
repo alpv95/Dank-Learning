@@ -336,7 +336,9 @@ class ShowAndTellModel(object):
           scope=logits_scope)
 
     if self.mode == "inference":
-      tf.nn.softmax(logits, name="softmax")
+      # Add a transpose so that Swift code will be faster
+      # [1, 1, 2, 38521]
+      tf.reshape(tf.nn.softmax(logits, name="softmax"), [1, 2, 38521, 1], name="softmax_T")
     else:
       targets = tf.reshape(self.target_seqs, [-1])
       weights = tf.to_float(tf.reshape(self.input_mask, [-1]))
