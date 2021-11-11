@@ -246,4 +246,4 @@ class CaptionGenerator(object):
     if not complete_captions.size():
       complete_captions = partial_captions
 
-    return initial_state #complete_captions.extract(sort=True) #initial_state
+    return complete_captions.extract(sort=True) #initial_state
