@@ -17,9 +17,9 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-import os
-os.environ["CUDA_VISIBLE_DEVICES"]="1"
 
+import os
+os.environ["CUDA_VISIBLE_DEVICES"]="3"
 import tensorflow as tf
 import sys
 sys.path.append('~/Desktop/Stanford/CS224n/MemeProject')
@@ -35,7 +35,7 @@ FLAGS = tf.app.flags.FLAGS
 
 tf.flags.DEFINE_string("input_file_pattern", "",
                        "File pattern of sharded TFRecord input files.")
-tf.flags.DEFINE_string("inception_checkpoint_file", "",
+tf.flags.DEFINE_string("inception_checkpoint_file", "InceptionCkpt/inception_v3.ckpt",
                        "Path to a pretrained inception_v3 model.")
 tf.flags.DEFINE_string("train_dir", "",
                        "Directory for saving and loading model checkpoints.")

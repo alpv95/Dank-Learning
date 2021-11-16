@@ -114,9 +114,9 @@ class CaptionGenerator(object):
   def __init__(self,
                model,
                vocab,
-               beam_size=5,
-	       temperature=1.3,
-               max_caption_length=25,
+               beam_size=2,
+	             temperature=2.4,
+               max_caption_length=20,
                length_normalization_factor=0.2):
     """Initializes the generator.
 
@@ -158,7 +158,7 @@ class CaptionGenerator(object):
       index = -1
       for item, item_probability in zip(w_and_p, temp_probs):
          cumulative_probability += item_probability
-	 index += 1
+         index += 1
          if x < cumulative_probability: break
     
       del w_and_p[index]; del temp_probs[index]
@@ -189,7 +189,8 @@ class CaptionGenerator(object):
         score=0.0,
         metadata=[""])
     partial_captions = TopN(self.beam_size)
-    partial_captions.push(initial_beam)
+    for i in range(self.beam_size):
+      partial_captions.push(initial_beam)
     complete_captions = TopN(self.beam_size)
 
     # Run beam search.
@@ -201,19 +202,20 @@ class CaptionGenerator(object):
 
       softmax, new_states, metadata = self.model.inference_step(sess,
                                                                 input_feed,
-                                                                state_feed)
+                                                                np.expand_dims(state_feed,axis=0))
 
       for i, partial_caption in enumerate(partial_captions_list):
+        # print(softmax)
         word_probabilities = softmax[i]
-	word_probabilities[self.vocab.unk_id] = 0 #set UNK prob to zero
-	#word_probabilities[self.vocab.end_id] *= 0.7 #try lowering probability of sentence ending, longer captions
-        state = new_states[i]
+        word_probabilities[self.vocab.unk_id] = 0 #set UNK prob to zero
+        #word_probabilities[self.vocab.end_id] *= 0.5 #try lowering probability of sentence ending, longer captions
+        state = np.squeeze(new_states)[i]
         # For this partial caption, get the beam_size most probable next words.
         words_and_probs = list(enumerate(word_probabilities))
         words_and_probs.sort(key=lambda x: -x[1])
-	#Introducing temperature into beam search: instead of taking the top 5, choose 5 from probability distribution
+        #Introducing temperature into beam search: instead of taking the top 5, choose 5 from probability distribution
         words_and_probs = self.random_pick(words_and_probs[:100],self.beam_size,self.temperature)
-	#words_and_probs = words_and_probs[0:self.beam_size]
+        #words_and_probs = words_and_probs[0:self.beam_size]
         
         # Each next word gives a new partial caption.
         for w, p in words_and_probs:
@@ -244,4 +246,4 @@ class CaptionGenerator(object):
     if not complete_captions.size():
       complete_captions = partial_captions
 
-    return complete_captions.extract(sort=True)
+    return complete_captions.extract(sort=True) #initial_state
