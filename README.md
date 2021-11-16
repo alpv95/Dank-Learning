@@ -49,7 +49,7 @@ pip install -e .
 cd ..
 ```
 
-Copy in the big files from wherever you got them (Google Drive)
+Copy in the big files (word embedding matrix & trained DNN weights) from this Google Drive: https://drive.google.com/drive/folders/1R8YRzh0LWno6TiQBTtdoNP73D5GiYviF?usp=sharing
 
 ```
 cp [path]/REAL_EMBEDDING_MATRIX im2txt/REAL_EMBEDDING_MATRIX
@@ -66,4 +66,4 @@ Get Jupyter notebooks fired up
 jupyter notebook
 ```
 
-Navigate in the browser that launched to `im2txt/model_conversion_debug.ipynb` and follow the steps in the notebook.
+Navigate in the browser that launched to `im2txt/model_conversion_debug.ipynb` and follow the steps in the notebook to generate your own memes!
