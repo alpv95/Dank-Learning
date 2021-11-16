@@ -19,11 +19,12 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-
+import os
 import show_and_tell_model
 import sys
-sys.path.insert(0, '/data/alpv95/MemeProject/im2txt/inference_utils')
+sys.path.insert(0, 'inference_utils')
 import inference_wrapper_base
+import numpy as np
 
 
 class InferenceWrapper(inference_wrapper_base.InferenceWrapperBase):
@@ -31,6 +32,13 @@ class InferenceWrapper(inference_wrapper_base.InferenceWrapperBase):
 
   def __init__(self):
     super(InferenceWrapper, self).__init__()
+    #self.embedding_map = np.loadtxt('REAL_EMBEDDING_MATRIX',dtype=np.float32)
+
+    with open('REAL_EMBEDDING_MATRIX', 'rb') as f:
+        lines = f.readlines()
+        nums = [map(float, line.strip().split()) for line in lines if line.strip() != '']
+        self.embeddings = np.array(nums)
+
 
   def build_model(self, model_config):
     model = show_and_tell_model.ShowAndTellModel(model_config, mode="inference")
@@ -43,10 +51,26 @@ class InferenceWrapper(inference_wrapper_base.InferenceWrapperBase):
     return initial_state
 
   def inference_step(self, sess, input_feed, state_feed):
+
+    #input_feed shape = [beam_size]
+    #state_feed shape = [beam_size, 1024]
+
+    embeddings = []
+    for i, feed in enumerate(input_feed):
+      embeddings.append(np.take(self.embeddings, feed, 0))
+    embeddings = np.array(embeddings)
+    embeddings = np.expand_dims(embeddings, axis=0)
+    # self.embeddings [38521, 300]
+    # input_feed [2, 38521]
+    # [1, 2, 300]
+
+
     softmax_output, state_output = sess.run(
         fetches=["softmax:0", "lstm/state:0"],
         feed_dict={
-            "input_feed:0": input_feed,
+            #"input_feed:0": input_feed,
             "lstm/state_feed:0": state_feed,
+            "seq_embeddings:0": embeddings,
+            #"seq_embedding/embedding_map:0": self.embedding_map
         })
     return softmax_output, state_output, None
