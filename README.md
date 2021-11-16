@@ -66,4 +66,4 @@ Get Jupyter notebooks fired up
 jupyter notebook
 ```
 
-Navigate in the browser that launched to `im2txt/model_conversion_debug.ipynb` and follow the steps in the notebook to generate your own memes!
+Navigate in the browser that launched to `im2txt/Meme_Maker.ipynb` and follow the steps in the notebook to generate your own memes! Also see `im2txt/model_conversion_debug.ipynb` for how we converted the model to tf-coreml for use on iOS. 
