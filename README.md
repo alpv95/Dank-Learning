@@ -16,6 +16,9 @@ We introduce a novel meme generation system, which given any image can produce a
 ### Apple App available! 
 Try the meme generator out for yourself: see https://danklearning.com/
 
+## Just here for the data?
+The data we scraped using `scraper.py` can be found in im2txt/memes (images) and im2txt/captions.txt (associated captions).
+
 ## Installation
 
 Clone the repo
@@ -25,7 +28,7 @@ Clone the repo
 Now cd in
 
 ```bash
-cd danklearning
+cd Dank-Learning
 ```
 
 Create a virtual environment and activate it
